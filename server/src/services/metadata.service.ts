@@ -520,6 +520,8 @@ export class MetadataService {
       profileDescription: tags.ProfileDescription || null,
       projectionType: tags.ProjectionType ? String(tags.ProjectionType).toUpperCase() : null,
       timeZone: tags.tz ?? null,
+      pickLabel: tags.PickLabel ?? null,
+      tags: tags.TagsList ?? null,
     };
 
     if (exifData.latitude === 0 && exifData.longitude === 0) {
