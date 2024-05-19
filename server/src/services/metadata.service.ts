@@ -248,8 +248,9 @@ export class MetadataService {
     await this.assetRepository.upsertExif(exifData);
 
     // check for tags to exclude asset from timeline
-    if (exifData.pickLabel == 1 ||  exifData.tags.indexOf('Categorie|Bracket') >= 0) {
-      asset.isArchived = 1;
+    let setArchived = false;
+    if (exifData.pickLabel == '1' ||  exifData.tags.indexOf('Categorie|Bracket') >= 0) {
+      setArchived = true;
     }
 
     const dateTimeOriginal = exifData.dateTimeOriginal;
@@ -265,6 +266,7 @@ export class MetadataService {
       duration: tags.Duration ? this.getDuration(tags.Duration) : null,
       localDateTime,
       fileCreatedAt: exifData.dateTimeOriginal ?? undefined,
+      isArchived: setArchived ? true : null,
     });
 
     await this.assetRepository.upsertJobStatus({
