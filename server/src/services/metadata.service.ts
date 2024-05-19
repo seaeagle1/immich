@@ -247,6 +247,11 @@ export class MetadataService {
     await this.applyReverseGeocoding(asset, exifData);
     await this.assetRepository.upsertExif(exifData);
 
+    // check for tags to exclude asset from timeline
+    if (exifData.pickLabel == 1 ||  exifData.tags.indexOf('Categorie|Bracket') >= 0) {
+      asset.isArchived = 1;
+    }
+
     const dateTimeOriginal = exifData.dateTimeOriginal;
     let localDateTime = dateTimeOriginal ?? undefined;
 
@@ -521,7 +526,7 @@ export class MetadataService {
       projectionType: tags.ProjectionType ? String(tags.ProjectionType).toUpperCase() : null,
       timeZone: tags.tz ?? null,
       pickLabel: tags.PickLabel ?? null,
-      tags: tags.TagsList ?? null,
+      tags: tags.HierarchicalSubject ?? null,
     };
 
     if (exifData.latitude === 0 && exifData.longitude === 0) {
