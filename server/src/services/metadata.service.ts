@@ -249,7 +249,7 @@ export class MetadataService {
 
     // check for tags to exclude asset from timeline
     let setArchived = false;
-    if (exifData.pickLabel == '1' ||  exifData.tags.indexOf('Categorie|Bracket') >= 0) {
+    if (exifData.tags.indexOf('Categorie|Bracket') >= 0 || exifData.tags.indexOf('Categorie|Afgewezen') >= 0) {
       setArchived = true;
     }
 
@@ -527,7 +527,6 @@ export class MetadataService {
       profileDescription: tags.ProfileDescription || null,
       projectionType: tags.ProjectionType ? String(tags.ProjectionType).toUpperCase() : null,
       timeZone: tags.tz ?? null,
-      pickLabel: tags.PickLabel ?? null,
       tags: tags.HierarchicalSubject ?? null,
     };
 
