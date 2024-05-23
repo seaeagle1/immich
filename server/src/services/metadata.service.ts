@@ -249,7 +249,7 @@ export class MetadataService {
 
     // check for tags to exclude asset from timeline
     let setArchived = false;
-    if (exifData.tags.indexOf('Categorie|Bracket') >= 0 || exifData.tags.indexOf('Categorie|Afgewezen') >= 0) {
+    if (exifData.tags != null && (exifData.tags.indexOf('Categorie|Bracket') >= 0 || exifData.tags.indexOf('Categorie|Afgewezen') >= 0)) {
       setArchived = true;
     }
 
@@ -266,7 +266,7 @@ export class MetadataService {
       duration: tags.Duration ? this.getDuration(tags.Duration) : null,
       localDateTime,
       fileCreatedAt: exifData.dateTimeOriginal ?? undefined,
-      isArchived: setArchived ? true : null,
+      isArchived: setArchived ? true : undefined,
     });
 
     await this.assetRepository.upsertJobStatus({
