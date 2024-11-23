@@ -214,12 +214,21 @@ export class MetadataService extends BaseService {
     await this.applyMotionPhotos(asset, exifTags);
 
     await this.assetRepository.upsertExif(exifData);
-
+    
+    // check for tags to exclude asset from timeline
+    let setArchived = false;
+    let catTags = exifTags.HierarchicalSubject;
+    if (catTags != null && (catTags.indexOf('Categorie|Bracket') >= 0 
+            || catTags.indexOf('Categorie|Afgewezen') >= 0)) {
+        setArchived = true;
+    }
+    
     await this.assetRepository.update({
       id: asset.id,
       duration: exifTags.Duration?.toString() ?? null,
       localDateTime,
       fileCreatedAt: exifData.dateTimeOriginal ?? undefined,
+      isArchived: setArchived ? true : undefined,
     });
 
     await this.assetRepository.upsertJobStatus({
