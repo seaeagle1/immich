@@ -289,9 +289,9 @@ export class MetadataService extends BaseService {
 
     // check for tags to exclude asset from timeline
     let setArchived = false;
-    let catTags = exifTags.HierarchicalSubject;
-    if (catTags != null && (catTags.indexOf('Categorie|Bracket') >= 0 
-            || catTags.indexOf('Categorie|Afgewezen') >= 0)) {
+    let catTags = this.getTagList(exifTags);
+    if (catTags != null && (catTags.indexOf('Categorie/Bracket') >= 0 
+            || catTags.indexOf('Categorie/Afgewezen') >= 0)) {
         setArchived = true;
     }
 
@@ -303,7 +303,7 @@ export class MetadataService extends BaseService {
         localDateTime: dates.localDateTime,
         fileCreatedAt: dates.dateTimeOriginal ?? undefined,
         fileModifiedAt: stats.mtime,      
-		isArchived: setArchived ? true : undefined,
+		visibility: setArchived ? 'archive' : undefined,
       }),
       this.applyTagList(asset, exifTags),
     ];
