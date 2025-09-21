@@ -67,23 +67,29 @@ String parameterToString(dynamic value) {
   if (value is AssetMediaStatus) {
     return AssetMediaStatusTypeTransformer().encode(value).toString();
   }
+  if (value is AssetMetadataKey) {
+    return AssetMetadataKeyTypeTransformer().encode(value).toString();
+  }
   if (value is AssetOrder) {
     return AssetOrderTypeTransformer().encode(value).toString();
   }
   if (value is AssetTypeEnum) {
     return AssetTypeEnumTypeTransformer().encode(value).toString();
   }
+  if (value is AssetVisibility) {
+    return AssetVisibilityTypeTransformer().encode(value).toString();
+  }
   if (value is AudioCodec) {
     return AudioCodecTypeTransformer().encode(value).toString();
+  }
+  if (value is BulkIdErrorReason) {
+    return BulkIdErrorReasonTypeTransformer().encode(value).toString();
   }
   if (value is CQMode) {
     return CQModeTypeTransformer().encode(value).toString();
   }
   if (value is Colorspace) {
     return ColorspaceTypeTransformer().encode(value).toString();
-  }
-  if (value is EntityType) {
-    return EntityTypeTypeTransformer().encode(value).toString();
   }
   if (value is ImageFormat) {
     return ImageFormatTypeTransformer().encode(value).toString();
@@ -103,14 +109,17 @@ String parameterToString(dynamic value) {
   if (value is MemoryType) {
     return MemoryTypeTypeTransformer().encode(value).toString();
   }
+  if (value is NotificationLevel) {
+    return NotificationLevelTypeTransformer().encode(value).toString();
+  }
+  if (value is NotificationType) {
+    return NotificationTypeTypeTransformer().encode(value).toString();
+  }
+  if (value is OAuthTokenEndpointAuthMethod) {
+    return OAuthTokenEndpointAuthMethodTypeTransformer().encode(value).toString();
+  }
   if (value is PartnerDirection) {
     return PartnerDirectionTypeTransformer().encode(value).toString();
-  }
-  if (value is PathEntityType) {
-    return PathEntityTypeTypeTransformer().encode(value).toString();
-  }
-  if (value is PathType) {
-    return PathTypeTypeTransformer().encode(value).toString();
   }
   if (value is Permission) {
     return PermissionTypeTransformer().encode(value).toString();
@@ -130,8 +139,11 @@ String parameterToString(dynamic value) {
   if (value is SourceType) {
     return SourceTypeTypeTransformer().encode(value).toString();
   }
-  if (value is TimeBucketSize) {
-    return TimeBucketSizeTypeTransformer().encode(value).toString();
+  if (value is SyncEntityType) {
+    return SyncEntityTypeTypeTransformer().encode(value).toString();
+  }
+  if (value is SyncRequestType) {
+    return SyncRequestTypeTypeTransformer().encode(value).toString();
   }
   if (value is ToneMapping) {
     return ToneMappingTypeTransformer().encode(value).toString();
@@ -144,6 +156,9 @@ String parameterToString(dynamic value) {
   }
   if (value is UserAvatarColor) {
     return UserAvatarColorTypeTransformer().encode(value).toString();
+  }
+  if (value is UserMetadataKey) {
+    return UserMetadataKeyTypeTransformer().encode(value).toString();
   }
   if (value is UserStatus) {
     return UserStatusTypeTransformer().encode(value).toString();

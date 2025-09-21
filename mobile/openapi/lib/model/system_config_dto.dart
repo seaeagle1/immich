@@ -23,12 +23,14 @@ class SystemConfigDto {
     required this.map,
     required this.metadata,
     required this.newVersionCheck,
+    required this.nightlyTasks,
     required this.notifications,
     required this.oauth,
     required this.passwordLogin,
     required this.reverseGeocoding,
     required this.server,
     required this.storageTemplate,
+    required this.templates,
     required this.theme,
     required this.trash,
     required this.user,
@@ -54,6 +56,8 @@ class SystemConfigDto {
 
   SystemConfigNewVersionCheckDto newVersionCheck;
 
+  SystemConfigNightlyTasksDto nightlyTasks;
+
   SystemConfigNotificationsDto notifications;
 
   SystemConfigOAuthDto oauth;
@@ -65,6 +69,8 @@ class SystemConfigDto {
   SystemConfigServerDto server;
 
   SystemConfigStorageTemplateDto storageTemplate;
+
+  SystemConfigTemplatesDto templates;
 
   SystemConfigThemeDto theme;
 
@@ -84,12 +90,14 @@ class SystemConfigDto {
     other.map == map &&
     other.metadata == metadata &&
     other.newVersionCheck == newVersionCheck &&
+    other.nightlyTasks == nightlyTasks &&
     other.notifications == notifications &&
     other.oauth == oauth &&
     other.passwordLogin == passwordLogin &&
     other.reverseGeocoding == reverseGeocoding &&
     other.server == server &&
     other.storageTemplate == storageTemplate &&
+    other.templates == templates &&
     other.theme == theme &&
     other.trash == trash &&
     other.user == user;
@@ -107,18 +115,20 @@ class SystemConfigDto {
     (map.hashCode) +
     (metadata.hashCode) +
     (newVersionCheck.hashCode) +
+    (nightlyTasks.hashCode) +
     (notifications.hashCode) +
     (oauth.hashCode) +
     (passwordLogin.hashCode) +
     (reverseGeocoding.hashCode) +
     (server.hashCode) +
     (storageTemplate.hashCode) +
+    (templates.hashCode) +
     (theme.hashCode) +
     (trash.hashCode) +
     (user.hashCode);
 
   @override
-  String toString() => 'SystemConfigDto[backup=$backup, ffmpeg=$ffmpeg, image=$image, job=$job, library_=$library_, logging=$logging, machineLearning=$machineLearning, map=$map, metadata=$metadata, newVersionCheck=$newVersionCheck, notifications=$notifications, oauth=$oauth, passwordLogin=$passwordLogin, reverseGeocoding=$reverseGeocoding, server=$server, storageTemplate=$storageTemplate, theme=$theme, trash=$trash, user=$user]';
+  String toString() => 'SystemConfigDto[backup=$backup, ffmpeg=$ffmpeg, image=$image, job=$job, library_=$library_, logging=$logging, machineLearning=$machineLearning, map=$map, metadata=$metadata, newVersionCheck=$newVersionCheck, nightlyTasks=$nightlyTasks, notifications=$notifications, oauth=$oauth, passwordLogin=$passwordLogin, reverseGeocoding=$reverseGeocoding, server=$server, storageTemplate=$storageTemplate, templates=$templates, theme=$theme, trash=$trash, user=$user]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -132,12 +142,14 @@ class SystemConfigDto {
       json[r'map'] = this.map;
       json[r'metadata'] = this.metadata;
       json[r'newVersionCheck'] = this.newVersionCheck;
+      json[r'nightlyTasks'] = this.nightlyTasks;
       json[r'notifications'] = this.notifications;
       json[r'oauth'] = this.oauth;
       json[r'passwordLogin'] = this.passwordLogin;
       json[r'reverseGeocoding'] = this.reverseGeocoding;
       json[r'server'] = this.server;
       json[r'storageTemplate'] = this.storageTemplate;
+      json[r'templates'] = this.templates;
       json[r'theme'] = this.theme;
       json[r'trash'] = this.trash;
       json[r'user'] = this.user;
@@ -163,12 +175,14 @@ class SystemConfigDto {
         map: SystemConfigMapDto.fromJson(json[r'map'])!,
         metadata: SystemConfigMetadataDto.fromJson(json[r'metadata'])!,
         newVersionCheck: SystemConfigNewVersionCheckDto.fromJson(json[r'newVersionCheck'])!,
+        nightlyTasks: SystemConfigNightlyTasksDto.fromJson(json[r'nightlyTasks'])!,
         notifications: SystemConfigNotificationsDto.fromJson(json[r'notifications'])!,
         oauth: SystemConfigOAuthDto.fromJson(json[r'oauth'])!,
         passwordLogin: SystemConfigPasswordLoginDto.fromJson(json[r'passwordLogin'])!,
         reverseGeocoding: SystemConfigReverseGeocodingDto.fromJson(json[r'reverseGeocoding'])!,
         server: SystemConfigServerDto.fromJson(json[r'server'])!,
         storageTemplate: SystemConfigStorageTemplateDto.fromJson(json[r'storageTemplate'])!,
+        templates: SystemConfigTemplatesDto.fromJson(json[r'templates'])!,
         theme: SystemConfigThemeDto.fromJson(json[r'theme'])!,
         trash: SystemConfigTrashDto.fromJson(json[r'trash'])!,
         user: SystemConfigUserDto.fromJson(json[r'user'])!,
@@ -229,12 +243,14 @@ class SystemConfigDto {
     'map',
     'metadata',
     'newVersionCheck',
+    'nightlyTasks',
     'notifications',
     'oauth',
     'passwordLogin',
     'reverseGeocoding',
     'server',
     'storageTemplate',
+    'templates',
     'theme',
     'trash',
     'user',

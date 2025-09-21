@@ -19,20 +19,20 @@ class MapApi {
   /// Performs an HTTP 'GET /map/markers' operation and returns the [Response].
   /// Parameters:
   ///
-  /// * [DateTime] fileCreatedAfter:
-  ///
-  /// * [DateTime] fileCreatedBefore:
-  ///
   /// * [bool] isArchived:
   ///
   /// * [bool] isFavorite:
   ///
+  /// * [DateTime] fileCreatedAfter:
+  ///
+  /// * [DateTime] fileCreatedBefore:
+  ///
   /// * [bool] withPartners:
   ///
   /// * [bool] withSharedAlbums:
-  Future<Response> getMapMarkersWithHttpInfo({ DateTime? fileCreatedAfter, DateTime? fileCreatedBefore, bool? isArchived, bool? isFavorite, bool? withPartners, bool? withSharedAlbums, }) async {
+  Future<Response> getMapMarkersWithHttpInfo({ bool? isArchived, bool? isFavorite, DateTime? fileCreatedAfter, DateTime? fileCreatedBefore, bool? withPartners, bool? withSharedAlbums, }) async {
     // ignore: prefer_const_declarations
-    final path = r'/map/markers';
+    final apiPath = r'/map/markers';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -41,17 +41,17 @@ class MapApi {
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    if (fileCreatedAfter != null) {
-      queryParams.addAll(_queryParams('', 'fileCreatedAfter', fileCreatedAfter));
-    }
-    if (fileCreatedBefore != null) {
-      queryParams.addAll(_queryParams('', 'fileCreatedBefore', fileCreatedBefore));
-    }
     if (isArchived != null) {
       queryParams.addAll(_queryParams('', 'isArchived', isArchived));
     }
     if (isFavorite != null) {
       queryParams.addAll(_queryParams('', 'isFavorite', isFavorite));
+    }
+    if (fileCreatedAfter != null) {
+      queryParams.addAll(_queryParams('', 'fileCreatedAfter', fileCreatedAfter));
+    }
+    if (fileCreatedBefore != null) {
+      queryParams.addAll(_queryParams('', 'fileCreatedBefore', fileCreatedBefore));
     }
     if (withPartners != null) {
       queryParams.addAll(_queryParams('', 'withPartners', withPartners));
@@ -64,7 +64,7 @@ class MapApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -76,19 +76,19 @@ class MapApi {
 
   /// Parameters:
   ///
-  /// * [DateTime] fileCreatedAfter:
-  ///
-  /// * [DateTime] fileCreatedBefore:
-  ///
   /// * [bool] isArchived:
   ///
   /// * [bool] isFavorite:
   ///
+  /// * [DateTime] fileCreatedAfter:
+  ///
+  /// * [DateTime] fileCreatedBefore:
+  ///
   /// * [bool] withPartners:
   ///
   /// * [bool] withSharedAlbums:
-  Future<List<MapMarkerResponseDto>?> getMapMarkers({ DateTime? fileCreatedAfter, DateTime? fileCreatedBefore, bool? isArchived, bool? isFavorite, bool? withPartners, bool? withSharedAlbums, }) async {
-    final response = await getMapMarkersWithHttpInfo( fileCreatedAfter: fileCreatedAfter, fileCreatedBefore: fileCreatedBefore, isArchived: isArchived, isFavorite: isFavorite, withPartners: withPartners, withSharedAlbums: withSharedAlbums, );
+  Future<List<MapMarkerResponseDto>?> getMapMarkers({ bool? isArchived, bool? isFavorite, DateTime? fileCreatedAfter, DateTime? fileCreatedBefore, bool? withPartners, bool? withSharedAlbums, }) async {
+    final response = await getMapMarkersWithHttpInfo( isArchived: isArchived, isFavorite: isFavorite, fileCreatedAfter: fileCreatedAfter, fileCreatedBefore: fileCreatedBefore, withPartners: withPartners, withSharedAlbums: withSharedAlbums, );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -113,7 +113,7 @@ class MapApi {
   /// * [double] lon (required):
   Future<Response> reverseGeocodeWithHttpInfo(double lat, double lon,) async {
     // ignore: prefer_const_declarations
-    final path = r'/map/reverse-geocode';
+    final apiPath = r'/map/reverse-geocode';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -129,7 +129,7 @@ class MapApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,

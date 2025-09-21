@@ -1,15 +1,13 @@
 <script lang="ts">
+  import { SettingInputFieldType } from '$lib/constants';
+  import { PasswordInput } from '@immich/ui';
+  import { onMount, tick, type Snippet } from 'svelte';
+  import { t } from 'svelte-i18n';
   import { quintOut } from 'svelte/easing';
   import type { FormEventHandler } from 'svelte/elements';
   import { fly } from 'svelte/transition';
-  import PasswordField from '../password-field.svelte';
-  import { t } from 'svelte-i18n';
-  import { onMount, tick, type Snippet } from 'svelte';
-  import { SettingInputFieldType } from '$lib/constants';
 
-  interface Props {
-    inputType: SettingInputFieldType;
-    value: string | number;
+  type Props = {
     min?: number;
     max?: number;
     step?: string;
@@ -22,7 +20,15 @@
     autofocus?: boolean;
     passwordAutocomplete?: AutoFill;
     descriptionSnippet?: Snippet;
-  }
+    trailingSnippet?: Snippet;
+  } & (
+    | { inputType: SettingInputFieldType.PASSWORD; value: string }
+    | { inputType: SettingInputFieldType.NUMBER; value: number | null | undefined }
+    | {
+        inputType: SettingInputFieldType.TEXT | SettingInputFieldType.COLOR | SettingInputFieldType.EMAIL;
+        value: string | null | undefined;
+      }
+  );
 
   let {
     inputType,
@@ -39,6 +45,7 @@
     autofocus = false,
     passwordAutocomplete = 'current-password',
     descriptionSnippet,
+    trailingSnippet,
   }: Props = $props();
 
   let input: HTMLInputElement | undefined = $state();
@@ -47,6 +54,11 @@
     value = e.currentTarget.value;
 
     if (inputType === SettingInputFieldType.NUMBER) {
+      if (value === '' && !required) {
+        value = null;
+        return;
+      }
+
       let newValue = Number(value) || 0;
       if (newValue < min) {
         newValue = min;
@@ -61,15 +73,15 @@
   onMount(() => {
     if (autofocus) {
       tick()
-        .then(() => input?.focus())
+        .then(() => setTimeout(() => input?.focus(), 0))
         .catch((_) => {});
     }
   });
 </script>
 
 <div class="mb-4 w-full">
-  <div class={`flex h-[26px] place-items-center gap-1`}>
-    <label class="font-medium text-immich-primary dark:text-immich-dark-primary text-sm" for={label}>{label}</label>
+  <div class="flex place-items-center gap-1">
+    <label class="font-medium text-primary text-sm min-h-6 uppercase" for={label}>{label}</label>
     {#if required}
       <div class="text-red-400">*</div>
     {/if}
@@ -93,11 +105,11 @@
   {/if}
 
   {#if inputType !== SettingInputFieldType.PASSWORD}
-    <div class="flex place-items-center place-content-center">
+    <div class="flex place-items-center place-content-center gap-2">
       {#if inputType === SettingInputFieldType.COLOR}
         <input
           bind:this={input}
-          class="immich-form-input w-full pb-2 rounded-none mr-1"
+          class="immich-form-input w-full pb-2 rounded-none me-1"
           aria-describedby={description ? `${label}-desc` : undefined}
           aria-labelledby="{label}-label"
           id={label}
@@ -107,7 +119,7 @@
           max={max.toString()}
           {step}
           {required}
-          {value}
+          bind:value
           onchange={handleChange}
           {disabled}
           {title}
@@ -127,22 +139,24 @@
         max={max.toString()}
         {step}
         {required}
-        {value}
+        bind:value
         onchange={handleChange}
         {disabled}
         {title}
       />
+
+      {@render trailingSnippet?.()}
     </div>
   {:else}
-    <PasswordField
+    <PasswordInput
       aria-describedby={description ? `${label}-desc` : undefined}
       aria-labelledby="{label}-label"
+      size="small"
       id={label}
       name={label}
       autocomplete={passwordAutocomplete}
       {required}
-      password={value.toString()}
-      onInput={(passwordValue) => (value = passwordValue)}
+      bind:value={value as string}
       {disabled}
       {title}
     />

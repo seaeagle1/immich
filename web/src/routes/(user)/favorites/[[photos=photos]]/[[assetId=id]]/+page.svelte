@@ -1,27 +1,29 @@
 <script lang="ts">
   import UserPageLayout from '$lib/components/layouts/user-page-layout.svelte';
-  import AddToAlbum from '$lib/components/photos-page/actions/add-to-album.svelte';
-  import ArchiveAction from '$lib/components/photos-page/actions/archive-action.svelte';
-  import ChangeDate from '$lib/components/photos-page/actions/change-date-action.svelte';
-  import ChangeLocation from '$lib/components/photos-page/actions/change-location-action.svelte';
-  import CreateSharedLink from '$lib/components/photos-page/actions/create-shared-link.svelte';
-  import DeleteAssets from '$lib/components/photos-page/actions/delete-assets.svelte';
-  import DownloadAction from '$lib/components/photos-page/actions/download-action.svelte';
-  import FavoriteAction from '$lib/components/photos-page/actions/favorite-action.svelte';
-  import SelectAllAssets from '$lib/components/photos-page/actions/select-all-assets.svelte';
-  import AssetGrid from '$lib/components/photos-page/asset-grid.svelte';
   import ButtonContextMenu from '$lib/components/shared-components/context-menu/button-context-menu.svelte';
-  import AssetSelectControlBar from '$lib/components/photos-page/asset-select-control-bar.svelte';
   import EmptyPlaceholder from '$lib/components/shared-components/empty-placeholder.svelte';
+  import AddToAlbum from '$lib/components/timeline/actions/AddToAlbumAction.svelte';
+  import ArchiveAction from '$lib/components/timeline/actions/ArchiveAction.svelte';
+  import ChangeDate from '$lib/components/timeline/actions/ChangeDateAction.svelte';
+  import ChangeDescription from '$lib/components/timeline/actions/ChangeDescriptionAction.svelte';
+  import ChangeLocation from '$lib/components/timeline/actions/ChangeLocationAction.svelte';
+  import CreateSharedLink from '$lib/components/timeline/actions/CreateSharedLinkAction.svelte';
+  import DeleteAssets from '$lib/components/timeline/actions/DeleteAssetsAction.svelte';
+  import DownloadAction from '$lib/components/timeline/actions/DownloadAction.svelte';
+  import FavoriteAction from '$lib/components/timeline/actions/FavoriteAction.svelte';
+  import SelectAllAssets from '$lib/components/timeline/actions/SelectAllAction.svelte';
+  import SetVisibilityAction from '$lib/components/timeline/actions/SetVisibilityAction.svelte';
+  import TagAction from '$lib/components/timeline/actions/TagAction.svelte';
+  import AssetSelectControlBar from '$lib/components/timeline/AssetSelectControlBar.svelte';
+  import Timeline from '$lib/components/timeline/Timeline.svelte';
   import { AssetAction } from '$lib/constants';
-  import { createAssetInteractionStore } from '$lib/stores/asset-interaction.store';
-  import { AssetStore } from '$lib/stores/assets.store';
-  import type { PageData } from './$types';
-  import { mdiDotsVertical, mdiPlus } from '@mdi/js';
-  import { t } from 'svelte-i18n';
-  import { onDestroy } from 'svelte';
+  import { TimelineManager } from '$lib/managers/timeline-manager/timeline-manager.svelte';
+  import { AssetInteraction } from '$lib/stores/asset-interaction.svelte';
   import { preferences } from '$lib/stores/user.store';
-  import TagAction from '$lib/components/photos-page/actions/tag-action.svelte';
+  import { mdiDotsVertical, mdiPlus } from '@mdi/js';
+  import { onDestroy } from 'svelte';
+  import { t } from 'svelte-i18n';
+  import type { PageData } from './$types';
 
   interface Props {
     data: PageData;
@@ -29,23 +31,49 @@
 
   let { data }: Props = $props();
 
-  const assetStore = new AssetStore({ isFavorite: true });
-  const assetInteractionStore = createAssetInteractionStore();
-  const { isMultiSelectState, selectedAssets } = assetInteractionStore;
+  const timelineManager = new TimelineManager();
+  void timelineManager.updateOptions({ isFavorite: true, withStacked: true });
+  onDestroy(() => timelineManager.destroy());
 
-  let isAllArchive = $derived([...$selectedAssets].every((asset) => asset.isArchived));
+  const assetInteraction = new AssetInteraction();
 
-  onDestroy(() => {
-    assetStore.destroy();
-  });
+  const handleEscape = () => {
+    if (assetInteraction.selectionActive) {
+      assetInteraction.clearMultiselect();
+      return;
+    }
+  };
+
+  const handleSetVisibility = (assetIds: string[]) => {
+    timelineManager.removeAssets(assetIds);
+    assetInteraction.clearMultiselect();
+  };
 </script>
 
+<UserPageLayout hideNavbar={assetInteraction.selectionActive} title={data.meta.title} scrollbar={false}>
+  <Timeline
+    enableRouting={true}
+    withStacked={true}
+    {timelineManager}
+    {assetInteraction}
+    removeAction={AssetAction.UNFAVORITE}
+    onEscape={handleEscape}
+  >
+    {#snippet empty()}
+      <EmptyPlaceholder text={$t('no_favorites_message')} />
+    {/snippet}
+  </Timeline>
+</UserPageLayout>
+
 <!-- Multiselection mode app bar -->
-{#if $isMultiSelectState}
-  <AssetSelectControlBar assets={$selectedAssets} clearSelect={() => assetInteractionStore.clearMultiselect()}>
-    <FavoriteAction removeFavorite onFavorite={(assetIds) => assetStore.removeAssets(assetIds)} />
+{#if assetInteraction.selectionActive}
+  <AssetSelectControlBar
+    assets={assetInteraction.selectedAssets}
+    clearSelect={() => assetInteraction.clearMultiselect()}
+  >
+    <FavoriteAction removeFavorite onFavorite={(assetIds) => timelineManager.removeAssets(assetIds)} />
     <CreateSharedLink />
-    <SelectAllAssets {assetStore} {assetInteractionStore} />
+    <SelectAllAssets {timelineManager} {assetInteraction} />
     <ButtonContextMenu icon={mdiPlus} title={$t('add_to')}>
       <AddToAlbum />
       <AddToAlbum shared />
@@ -53,20 +81,22 @@
     <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
       <DownloadAction menuItem />
       <ChangeDate menuItem />
+      <ChangeDescription menuItem />
       <ChangeLocation menuItem />
-      <ArchiveAction menuItem unarchive={isAllArchive} onArchive={(assetIds) => assetStore.removeAssets(assetIds)} />
+      <ArchiveAction
+        menuItem
+        unarchive={assetInteraction.isAllArchived}
+        onArchive={(assetIds) => timelineManager.removeAssets(assetIds)}
+      />
       {#if $preferences.tags.enabled}
         <TagAction menuItem />
       {/if}
-      <DeleteAssets menuItem onAssetDelete={(assetIds) => assetStore.removeAssets(assetIds)} />
+      <SetVisibilityAction menuItem onVisibilitySet={handleSetVisibility} />
+      <DeleteAssets
+        menuItem
+        onAssetDelete={(assetIds) => timelineManager.removeAssets(assetIds)}
+        onUndoDelete={(assets) => timelineManager.addAssets(assets)}
+      />
     </ButtonContextMenu>
   </AssetSelectControlBar>
 {/if}
-
-<UserPageLayout hideNavbar={$isMultiSelectState} title={data.meta.title} scrollbar={false}>
-  <AssetGrid enableRouting={true} {assetStore} {assetInteractionStore} removeAction={AssetAction.UNFAVORITE}>
-    {#snippet empty()}
-      <EmptyPlaceholder text={$t('no_favorites_message')} />
-    {/snippet}
-  </AssetGrid>
-</UserPageLayout>

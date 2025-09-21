@@ -1,18 +1,25 @@
 import { goto } from '$app/navigation';
-import FormatBoldMessage from '$lib/components/i18n/format-bold-message.svelte';
-import { NotificationType, notificationController } from '$lib/components/shared-components/notification/notification';
+import { notificationController, NotificationType } from '$lib/components/shared-components/notification/notification';
 import { AppRoute } from '$lib/constants';
-import type { AssetInteractionStore } from '$lib/stores/asset-interaction.store';
-import { assetViewingStore } from '$lib/stores/asset-viewing.store';
-import { isSelectingAllAssets, type AssetStore } from '$lib/stores/assets.store';
-import { downloadManager } from '$lib/stores/download';
+import { authManager } from '$lib/managers/auth-manager.svelte';
+import { downloadManager } from '$lib/managers/download-manager.svelte';
+import type { TimelineManager } from '$lib/managers/timeline-manager/timeline-manager.svelte';
+import type { TimelineAsset } from '$lib/managers/timeline-manager/types';
+import { assetsSnapshot } from '$lib/managers/timeline-manager/utils.svelte';
+import type { AssetInteraction } from '$lib/stores/asset-interaction.svelte';
+import { isSelectingAllAssets } from '$lib/stores/assets-store.svelte';
 import { preferences } from '$lib/stores/user.store';
-import { downloadRequest, getKey, withError } from '$lib/utils';
-import { createAlbum } from '$lib/utils/album-utils';
+import { downloadRequest, sleep, withError } from '$lib/utils';
 import { getByteUnitString } from '$lib/utils/byte-units';
 import { getFormatter } from '$lib/utils/i18n';
+import { navigate } from '$lib/utils/navigation';
+import { asQueryString } from '$lib/utils/shared-links';
 import {
   addAssetsToAlbum as addAssets,
+  addAssetsToAlbums as addToAlbums,
+  AssetVisibility,
+  BulkIdErrorReason,
+  bulkTagAssets,
   createStack,
   deleteAssets,
   deleteStacks,
@@ -20,7 +27,6 @@ import {
   getBaseUrl,
   getDownloadInfo,
   getStack,
-  tagAssets as tagAllAssets,
   untagAssets,
   updateAsset,
   updateAssets,
@@ -28,6 +34,7 @@ import {
   type AssetResponseDto,
   type AssetTypeEnum,
   type DownloadInfoDto,
+  type ExifResponseDto,
   type StackResponseDto,
   type UserPreferencesResponseDto,
   type UserResponseDto,
@@ -39,23 +46,27 @@ import { handleError } from './handle-error';
 
 export const addAssetsToAlbum = async (albumId: string, assetIds: string[], showNotification = true) => {
   const result = await addAssets({
+    ...authManager.params,
     id: albumId,
     bulkIdsDto: {
       ids: assetIds,
     },
-    key: getKey(),
   });
   const count = result.filter(({ success }) => success).length;
+  const duplicateErrorCount = result.filter(({ error }) => error === 'duplicate').length;
   const $t = get(t);
 
   if (showNotification) {
+    let message = $t('assets_cannot_be_added_to_album_count', { values: { count: assetIds.length } });
+    if (count > 0) {
+      message = $t('assets_added_to_album_count', { values: { count } });
+    } else if (duplicateErrorCount > 0) {
+      message = $t('assets_were_part_of_album_count', { values: { count: duplicateErrorCount } });
+    }
     notificationController.show({
       type: NotificationType.Info,
       timeout: 5000,
-      message:
-        count > 0
-          ? $t('assets_added_to_album_count', { values: { count } })
-          : $t('assets_were_part_of_album_count', { values: { count: assetIds.length } }),
+      message,
       button: {
         text: $t('view_album'),
         onClick() {
@@ -63,6 +74,52 @@ export const addAssetsToAlbum = async (albumId: string, assetIds: string[], show
         },
       },
     });
+  }
+};
+
+export const addAssetsToAlbums = async (albumIds: string[], assetIds: string[], showNotification = true) => {
+  const result = await addToAlbums({
+    ...authManager.params,
+    albumsAddAssetsDto: {
+      albumIds,
+      assetIds,
+    },
+  });
+
+  if (!showNotification) {
+    return result;
+  }
+
+  if (showNotification) {
+    const $t = get(t);
+
+    if (result.error === BulkIdErrorReason.Duplicate) {
+      notificationController.show({
+        type: NotificationType.Info,
+        timeout: 5000,
+        message: $t('assets_were_part_of_albums_count', { values: { count: assetIds.length } }),
+      });
+      return result;
+    }
+    if (result.error) {
+      notificationController.show({
+        type: NotificationType.Info,
+        timeout: 5000,
+        message: $t('assets_cannot_be_added_to_albums', { values: { count: assetIds.length } }),
+      });
+      return result;
+    }
+    notificationController.show({
+      type: NotificationType.Info,
+      timeout: 5000,
+      message: $t('assets_added_to_albums_count', {
+        values: {
+          albumTotal: albumIds.length,
+          assetTotal: assetIds.length,
+        },
+      }),
+    });
+    return result;
   }
 };
 
@@ -75,9 +132,7 @@ export const tagAssets = async ({
   tagIds: string[];
   showNotification?: boolean;
 }) => {
-  for (const tagId of tagIds) {
-    await tagAllAssets({ id: tagId, bulkIdsDto: { ids: assetIds } });
-  }
+  await bulkTagAssets({ tagBulkAssetsDto: { tagIds, assetIds } });
 
   if (showNotification) {
     const $t = await getFormatter();
@@ -114,32 +169,6 @@ export const removeTag = async ({
   return assetIds;
 };
 
-export const addAssetsToNewAlbum = async (albumName: string, assetIds: string[]) => {
-  const album = await createAlbum(albumName, assetIds);
-  if (!album) {
-    return;
-  }
-  const $t = get(t);
-  notificationController.show({
-    type: NotificationType.Info,
-    timeout: 5000,
-    component: {
-      type: FormatBoldMessage,
-      props: {
-        key: 'assets_added_to_name_count',
-        values: { count: assetIds.length, name: albumName, hasName: !!albumName },
-      },
-    },
-    button: {
-      text: $t('view_album'),
-      onClick() {
-        return goto(`${AppRoute.ALBUMS}/${album.id}`);
-      },
-    },
-  });
-  return album;
-};
-
 export const downloadAlbum = async (album: AlbumResponseDto) => {
   await downloadArchive(`${album.albumName}.zip`, {
     albumId: album.id,
@@ -160,11 +189,23 @@ export const downloadBlob = (data: Blob, filename: string) => {
   URL.revokeObjectURL(url);
 };
 
+export const downloadUrl = (url: string, filename: string) => {
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+
+  URL.revokeObjectURL(url);
+};
+
 export const downloadArchive = async (fileName: string, options: Omit<DownloadInfoDto, 'archiveSize'>) => {
   const $preferences = get<UserPreferencesResponseDto | undefined>(preferences);
   const dto = { ...options, archiveSize: $preferences?.download.archiveSize };
 
-  const [error, downloadInfo] = await withError(() => getDownloadInfo({ downloadInfoDto: dto, key: getKey() }));
+  const [error, downloadInfo] = await withError(() => getDownloadInfo({ ...authManager.params, downloadInfoDto: dto }));
   if (error) {
     const $t = get(t);
     handleError(error, $t('errors.unable_to_download_files'));
@@ -179,7 +220,7 @@ export const downloadArchive = async (fileName: string, options: Omit<DownloadIn
     const archive = downloadInfo.archives[index];
     const suffix = downloadInfo.archives.length > 1 ? `+${index + 1}` : '';
     const archiveName = fileName.replace('.zip', `${suffix}-${DateTime.now().toFormat('yyyyLLdd_HHmmss')}.zip`);
-    const key = getKey();
+    const queryParams = asQueryString(authManager.params);
 
     let downloadKey = `${archiveName} `;
     if (downloadInfo.archives.length > 1) {
@@ -193,7 +234,7 @@ export const downloadArchive = async (fileName: string, options: Omit<DownloadIn
       // TODO use sdk once it supports progress events
       const { data } = await downloadRequest({
         method: 'POST',
-        url: getBaseUrl() + '/download/archive' + (key ? `?key=${key}` : ''),
+        url: getBaseUrl() + '/download/archive' + (queryParams ? `?${queryParams}` : ''),
         data: { assetIds: archive.assetIds },
         signal: abort.signal,
         onDownloadProgress: (event) => downloadManager.update(downloadKey, event.loaded),
@@ -226,8 +267,8 @@ export const downloadFile = async (asset: AssetResponseDto) => {
   };
 
   if (asset.livePhotoVideoId) {
-    const motionAsset = await getAssetInfo({ id: asset.livePhotoVideoId, key: getKey() });
-    if (!isAndroidMotionVideo(motionAsset) || get(preferences).download.includeEmbeddedVideos) {
+    const motionAsset = await getAssetInfo({ ...authManager.params, id: asset.livePhotoVideoId });
+    if (!isAndroidMotionVideo(motionAsset) || get(preferences)?.download.includeEmbeddedVideos) {
       assets.push({
         filename: motionAsset.originalFileName,
         id: asset.livePhotoVideoId,
@@ -236,33 +277,23 @@ export const downloadFile = async (asset: AssetResponseDto) => {
     }
   }
 
-  for (const { filename, id, size } of assets) {
-    const downloadKey = filename;
+  const queryParams = asQueryString(authManager.params);
+
+  for (const [i, { filename, id }] of assets.entries()) {
+    if (i !== 0) {
+      // play nice with Safari
+      await sleep(500);
+    }
 
     try {
-      const abort = new AbortController();
-      downloadManager.add(downloadKey, size, abort);
-      const key = getKey();
-
       notificationController.show({
         type: NotificationType.Info,
         message: $t('downloading_asset_filename', { values: { filename: asset.originalFileName } }),
       });
 
-      // TODO use sdk once it supports progress events
-      const { data } = await downloadRequest({
-        method: 'GET',
-        url: getBaseUrl() + `/assets/${id}/original` + (key ? `?key=${key}` : ''),
-        signal: abort.signal,
-        onDownloadProgress: (event) => downloadManager.update(downloadKey, event.loaded, event.total),
-      });
-
-      downloadBlob(data, filename);
+      downloadUrl(getBaseUrl() + `/assets/${id}/original` + (queryParams ? `?${queryParams}` : ''), filename);
     } catch (error) {
       handleError(error, $t('errors.error_downloading', { values: { filename } }));
-      downloadManager.clear(downloadKey);
-    } finally {
-      setTimeout(() => downloadManager.clear(downloadKey), 5000);
     }
   }
 };
@@ -298,9 +329,18 @@ export function isFlipped(orientation?: string | null) {
   return value && (isRotated270CW(value) || isRotated90CW(value));
 }
 
-export function getFileSize(asset: AssetResponseDto): string {
+export const getDimensions = (exifInfo: ExifResponseDto) => {
+  const { exifImageWidth: width, exifImageHeight: height } = exifInfo;
+  if (isFlipped(exifInfo.orientation)) {
+    return { width: height, height: width };
+  }
+
+  return { width, height };
+};
+
+export function getFileSize(asset: AssetResponseDto, maxPrecision = 4): string {
   const size = asset.exifInfo?.fileSizeInByte || 0;
-  return size > 0 ? getByteUnitString(size, undefined, 4) : 'Invalid Data';
+  return size > 0 ? getByteUnitString(size, undefined, maxPrecision) : 'Invalid Data';
 }
 
 export function getAssetResolution(asset: AssetResponseDto): string {
@@ -365,7 +405,7 @@ export const getAssetType = (type: AssetTypeEnum) => {
   }
 };
 
-export const getSelectedAssets = (assets: Set<AssetResponseDto>, user: UserResponseDto | null): string[] => {
+export const getSelectedAssets = (assets: TimelineAsset[], user: UserResponseDto | null): string[] => {
   const ids = [...assets].filter((a) => user && a.ownerId === user.id).map((a) => a.id);
 
   const numberOfIssues = [...assets].filter((a) => user && a.ownerId !== user.id).length;
@@ -379,9 +419,14 @@ export const getSelectedAssets = (assets: Set<AssetResponseDto>, user: UserRespo
   return ids;
 };
 
-export const stackAssets = async (assets: AssetResponseDto[], showNotification = true) => {
+export type StackResponse = {
+  stack?: StackResponseDto;
+  toDeleteIds: string[];
+};
+
+export const stackAssets = async (assets: { id: string }[], showNotification = true): Promise<StackResponse> => {
   if (assets.length < 2) {
-    return false;
+    return { stack: undefined, toDeleteIds: [] };
   }
 
   const $t = get(t);
@@ -394,19 +439,18 @@ export const stackAssets = async (assets: AssetResponseDto[], showNotification =
         type: NotificationType.Info,
         button: {
           text: $t('view_stack'),
-          onClick: () => assetViewingStore.setAssetId(stack.primaryAssetId),
+          onClick: () => navigate({ targetRoute: 'current', assetId: stack.primaryAssetId }),
         },
       });
     }
 
-    for (const [index, asset] of assets.entries()) {
-      asset.stack = index === 0 ? { id: stack.id, assetCount: stack.assets.length, primaryAssetId: asset.id } : null;
-    }
-
-    return assets.slice(1).map((asset) => asset.id);
+    return {
+      stack,
+      toDeleteIds: assets.slice(1).map((asset) => asset.id),
+    };
   } catch (error) {
     handleError(error, $t('errors.failed_to_stack_assets'));
-    return false;
+    return { stack: undefined, toDeleteIds: [] };
   }
 };
 
@@ -460,7 +504,7 @@ export const keepThisDeleteOthers = async (keepAsset: AssetResponseDto, stack: S
   }
 };
 
-export const selectAllAssets = async (assetStore: AssetStore, assetInteractionStore: AssetInteractionStore) => {
+export const selectAllAssets = async (timelineManager: TimelineManager, assetInteraction: AssetInteraction) => {
   if (get(isSelectingAllAssets)) {
     // Selection is already ongoing
     return;
@@ -468,19 +512,18 @@ export const selectAllAssets = async (assetStore: AssetStore, assetInteractionSt
   isSelectingAllAssets.set(true);
 
   try {
-    for (const bucket of assetStore.buckets) {
-      await assetStore.loadBucket(bucket.bucketDate);
+    for (const monthGroup of timelineManager.months) {
+      await timelineManager.loadMonthGroup(monthGroup.yearMonth);
 
       if (!get(isSelectingAllAssets)) {
+        assetInteraction.clearMultiselect();
         break; // Cancelled
       }
-      assetInteractionStore.selectAssets(bucket.assets);
+      assetInteraction.selectAssets(assetsSnapshot([...monthGroup.assetsIterator()]));
 
-      // We use setTimeout to allow the UI to update. Otherwise, this may
-      // cause a long delay between the start of 'select all' and the
-      // effective update of the UI, depending on the number of assets
-      // to select
-      await delay(0);
+      for (const dateGroup of monthGroup.dayGroups) {
+        assetInteraction.addGroupToMultiselectGroup(dateGroup.groupTitle);
+      }
     }
   } catch (error) {
     const $t = get(t);
@@ -489,9 +532,9 @@ export const selectAllAssets = async (assetStore: AssetStore, assetInteractionSt
   }
 };
 
-export const cancelMultiselect = (assetInteractionStore: AssetInteractionStore) => {
+export const cancelMultiselect = (assetInteraction: AssetInteraction) => {
   isSelectingAllAssets.set(false);
-  assetInteractionStore.clearMultiselect();
+  assetInteraction.clearMultiselect();
 };
 
 export const toggleArchive = async (asset: AssetResponseDto) => {
@@ -500,7 +543,7 @@ export const toggleArchive = async (asset: AssetResponseDto) => {
     const data = await updateAsset({
       id: asset.id,
       updateAssetDto: {
-        isArchived: !asset.isArchived,
+        visibility: asset.isArchived ? AssetVisibility.Timeline : AssetVisibility.Archive,
       },
     });
 
@@ -517,28 +560,29 @@ export const toggleArchive = async (asset: AssetResponseDto) => {
   return asset;
 };
 
-export const archiveAssets = async (assets: AssetResponseDto[], archive: boolean) => {
-  const isArchived = archive;
+export const archiveAssets = async (assets: { id: string }[], visibility: AssetVisibility) => {
   const ids = assets.map(({ id }) => id);
   const $t = get(t);
 
   try {
     if (ids.length > 0) {
-      await updateAssets({ assetBulkUpdateDto: { ids, isArchived } });
-    }
-
-    for (const asset of assets) {
-      asset.isArchived = isArchived;
+      await updateAssets({
+        assetBulkUpdateDto: { ids, visibility },
+      });
     }
 
     notificationController.show({
-      message: isArchived
-        ? $t('archived_count', { values: { count: ids.length } })
-        : $t('unarchived_count', { values: { count: ids.length } }),
+      message:
+        visibility === AssetVisibility.Archive
+          ? $t('archived_count', { values: { count: ids.length } })
+          : $t('unarchived_count', { values: { count: ids.length } }),
       type: NotificationType.Info,
     });
   } catch (error) {
-    handleError(error, $t('errors.unable_to_archive_unarchive', { values: { archived: isArchived } }));
+    handleError(
+      error,
+      $t('errors.unable_to_archive_unarchive', { values: { archived: visibility === AssetVisibility.Archive } }),
+    );
   }
 
   return ids;
@@ -549,7 +593,7 @@ export const delay = async (ms: number) => {
 };
 
 export const canCopyImageToClipboard = (): boolean => {
-  return !!(navigator.clipboard && window.ClipboardItem);
+  return !!(navigator.clipboard && globalThis.ClipboardItem);
 };
 
 const imgToBlob = async (imageElement: HTMLImageElement) => {
@@ -581,7 +625,21 @@ const urlToBlob = async (imageSource: string) => {
   return await response.blob();
 };
 
-export const copyImageToClipboard = async (source: HTMLImageElement | string) => {
-  const blob = source instanceof HTMLImageElement ? await imgToBlob(source) : await urlToBlob(source);
+export const copyImageToClipboard = async (
+  source: HTMLImageElement | string,
+): Promise<{ success: true } | { success: false; mimeType: string }> => {
+  if (source instanceof HTMLImageElement) {
+    // do not await, so the Safari clipboard write happens in the context of the user gesture
+    await navigator.clipboard.write([new ClipboardItem({ ['image/png']: imgToBlob(source) })]);
+    return { success: true };
+  }
+
+  // if we had a way to get the mime type synchronously, we could do the same thing here
+  const blob = await urlToBlob(source);
+  if (!ClipboardItem.supports(blob.type)) {
+    return { success: false, mimeType: blob.type };
+  }
+
   await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+  return { success: true };
 };

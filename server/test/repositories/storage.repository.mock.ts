@@ -1,6 +1,7 @@
-import { WatchOptions } from 'chokidar';
+import { ChokidarOptions } from 'chokidar';
 import { StorageCore } from 'src/cores/storage.core';
-import { IStorageRepository, WatchEvents } from 'src/interfaces/storage.interface';
+import { StorageRepository, WatchEvents } from 'src/repositories/storage.repository';
+import { RepositoryInterface } from 'src/types';
 import { Mocked, vitest } from 'vitest';
 
 interface MockWatcherOptions {
@@ -10,7 +11,7 @@ interface MockWatcherOptions {
 
 export const makeMockWatcher =
   ({ items, close }: MockWatcherOptions) =>
-  (paths: string[], options: WatchOptions, events: Partial<WatchEvents>) => {
+  (paths: string[], options: ChokidarOptions, events: Partial<WatchEvents>) => {
     events.onReady?.();
     for (const item of items || []) {
       switch (item.event) {
@@ -28,6 +29,7 @@ export const makeMockWatcher =
         }
         case 'error': {
           events.onError?.(new Error(item.value));
+          break;
         }
       }
     }
@@ -39,10 +41,9 @@ export const makeMockWatcher =
     return () => Promise.resolve();
   };
 
-export const newStorageRepositoryMock = (reset = true): Mocked<IStorageRepository> => {
-  if (reset) {
-    StorageCore.reset();
-  }
+export const newStorageRepositoryMock = (): Mocked<RepositoryInterface<StorageRepository>> => {
+  StorageCore.reset();
+  StorageCore.setMediaLocation('/data');
 
   return {
     createZipStream: vitest.fn(),
@@ -51,6 +52,7 @@ export const newStorageRepositoryMock = (reset = true): Mocked<IStorageRepositor
     createFile: vitest.fn(),
     createWriteStream: vitest.fn(),
     createOrOverwriteFile: vitest.fn(),
+    existsSync: vitest.fn(),
     overwriteFile: vitest.fn(),
     unlink: vitest.fn(),
     unlinkDir: vitest.fn().mockResolvedValue(true),

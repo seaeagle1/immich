@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/asyncvalue_extensions.dart';
-import 'package:immich_mobile/providers/asset_viewer/render_list.provider.dart';
+import 'package:immich_mobile/providers/timeline.provider.dart';
 import 'package:immich_mobile/widgets/asset_grid/asset_grid_data_structure.dart';
 import 'package:immich_mobile/widgets/asset_grid/immich_asset_grid_view.dart';
 import 'package:immich_mobile/providers/app_settings.provider.dart';
@@ -27,11 +27,11 @@ class ImmichAssetGrid extends HookConsumerWidget {
   final bool canDeselect;
   final bool? dynamicLayout;
   final bool showMultiSelectIndicator;
-  final void Function(Iterable<ItemPosition> itemPositions)?
-      visibleItemsListener;
+  final void Function(Iterable<ItemPosition> itemPositions)? visibleItemsListener;
   final Widget? topWidget;
   final bool shrinkWrap;
   final bool showDragScroll;
+  final bool showDragScrollLabel;
   final bool showStack;
 
   const ImmichAssetGrid({
@@ -52,6 +52,7 @@ class ImmichAssetGrid extends HookConsumerWidget {
     this.topWidget,
     this.shrinkWrap = false,
     this.showDragScroll = true,
+    this.showDragScrollLabel = true,
     this.showStack = false,
   });
 
@@ -59,9 +60,7 @@ class ImmichAssetGrid extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     var settings = ref.watch(appSettingsServiceProvider);
 
-    final perRow = useState(
-      assetsPerRow ?? settings.getSetting(AppSettingsEnum.tilesPerRow)!,
-    );
+    final perRow = useState(assetsPerRow ?? settings.getSetting(AppSettingsEnum.tilesPerRow)!);
     final scaleFactor = useState(7.0 - perRow.value);
     final baseScaleFactor = useState(7.0 - perRow.value);
 
@@ -80,38 +79,34 @@ class ImmichAssetGrid extends HookConsumerWidget {
     Widget buildAssetGridView(RenderList renderList) {
       return RawGestureDetector(
         gestures: {
-          CustomScaleGestureRecognizer: GestureRecognizerFactoryWithHandlers<
-                  CustomScaleGestureRecognizer>(
-              () => CustomScaleGestureRecognizer(),
-              (CustomScaleGestureRecognizer scale) {
-            scale.onStart = (details) {
-              baseScaleFactor.value = scaleFactor.value;
-            };
+          CustomScaleGestureRecognizer: GestureRecognizerFactoryWithHandlers<CustomScaleGestureRecognizer>(
+            () => CustomScaleGestureRecognizer(),
+            (CustomScaleGestureRecognizer scale) {
+              scale.onStart = (details) {
+                baseScaleFactor.value = scaleFactor.value;
+              };
 
-            scale.onUpdate = (details) {
-              scaleFactor.value = max(
-                min(5.0, baseScaleFactor.value * details.scale),
-                1.0,
-              );
-              if (7 - scaleFactor.value.toInt() != perRow.value) {
-                perRow.value = 7 - scaleFactor.value.toInt();
-              }
-            };
-          }),
+              scale.onUpdate = (details) {
+                scaleFactor.value = max(min(5.0, baseScaleFactor.value * details.scale), 1.0);
+                if (7 - scaleFactor.value.toInt() != perRow.value) {
+                  perRow.value = 7 - scaleFactor.value.toInt();
+                  settings.setSetting(AppSettingsEnum.tilesPerRow, perRow.value);
+                }
+              };
+            },
+          ),
         },
         child: ImmichAssetGridView(
           onRefresh: onRefresh,
           assetsPerRow: perRow.value,
           listener: listener,
-          showStorageIndicator: showStorageIndicator ??
-              settings.getSetting(AppSettingsEnum.storageIndicator),
+          showStorageIndicator: showStorageIndicator ?? settings.getSetting(AppSettingsEnum.storageIndicator),
           renderList: renderList,
           margin: margin,
           selectionActive: selectionActive,
           preselectedAssets: preselectedAssets,
           canDeselect: canDeselect,
-          dynamicLayout: dynamicLayout ??
-              settings.getSetting(AppSettingsEnum.dynamicLayout),
+          dynamicLayout: dynamicLayout ?? settings.getSetting(AppSettingsEnum.dynamicLayout),
           showMultiSelectIndicator: showMultiSelectIndicator,
           visibleItemsListener: visibleItemsListener,
           topWidget: topWidget,
@@ -119,16 +114,15 @@ class ImmichAssetGrid extends HookConsumerWidget {
           shrinkWrap: shrinkWrap,
           showDragScroll: showDragScroll,
           showStack: showStack,
+          showLabel: showDragScrollLabel,
         ),
       );
     }
 
     if (renderList != null) return buildAssetGridView(renderList!);
 
-    final renderListFuture = ref.watch(renderListProvider(assets!));
-    return renderListFuture.widgetWhen(
-      onData: (renderList) => buildAssetGridView(renderList),
-    );
+    final renderListFuture = ref.watch(assetsTimelineProvider(assets!));
+    return renderListFuture.widgetWhen(onData: (renderList) => buildAssetGridView(renderList));
   }
 }
 

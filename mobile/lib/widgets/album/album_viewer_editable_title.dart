@@ -4,20 +4,21 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:immich_mobile/extensions/build_context_extensions.dart';
 import 'package:immich_mobile/providers/album/album_viewer.provider.dart';
-import 'package:immich_mobile/entities/album.entity.dart';
 
 class AlbumViewerEditableTitle extends HookConsumerWidget {
-  final Album album;
+  final String albumName;
   final FocusNode titleFocusNode;
-  const AlbumViewerEditableTitle({
-    super.key,
-    required this.album,
-    required this.titleFocusNode,
-  });
+  const AlbumViewerEditableTitle({super.key, required this.albumName, required this.titleFocusNode});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final titleTextEditController = useTextEditingController(text: album.name);
+    final albumViewerState = ref.watch(albumViewerProvider);
+
+    final titleTextEditController = useTextEditingController(
+      text: albumViewerState.isEditAlbum && albumViewerState.editTitleText.isNotEmpty
+          ? albumViewerState.editTitleText
+          : albumName,
+    );
 
     void onFocusModeChange() {
       if (!titleFocusNode.hasFocus && titleTextEditController.text.isEmpty) {
@@ -26,15 +27,12 @@ class AlbumViewerEditableTitle extends HookConsumerWidget {
       }
     }
 
-    useEffect(
-      () {
-        titleFocusNode.addListener(onFocusModeChange);
-        return () {
-          titleFocusNode.removeListener(onFocusModeChange);
-        };
-      },
-      [],
-    );
+    useEffect(() {
+      titleFocusNode.addListener(onFocusModeChange);
+      return () {
+        titleFocusNode.removeListener(onFocusModeChange);
+      };
+    }, []);
 
     return Material(
       color: Colors.transparent,
@@ -46,12 +44,12 @@ class AlbumViewerEditableTitle extends HookConsumerWidget {
           }
         },
         focusNode: titleFocusNode,
-        style: context.textTheme.headlineMedium,
+        style: context.textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w700),
         controller: titleTextEditController,
         onTap: () {
           context.focusScope.requestFocus(titleFocusNode);
 
-          ref.watch(albumViewerProvider.notifier).setEditTitleText(album.name);
+          ref.watch(albumViewerProvider.notifier).setEditTitleText(albumName);
           ref.watch(albumViewerProvider.notifier).enableEditAlbum();
 
           if (titleTextEditController.text == 'Untitled') {
@@ -59,33 +57,23 @@ class AlbumViewerEditableTitle extends HookConsumerWidget {
           }
         },
         decoration: InputDecoration(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
           suffixIcon: titleFocusNode.hasFocus
               ? IconButton(
                   onPressed: () {
                     titleTextEditController.clear();
                   },
-                  icon: Icon(
-                    Icons.cancel_rounded,
-                    color: context.primaryColor,
-                  ),
+                  icon: Icon(Icons.cancel_rounded, color: context.primaryColor),
                   splashRadius: 10,
                 )
               : null,
-          enabledBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.transparent),
-          ),
-          focusedBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.transparent),
-          ),
+          enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.transparent)),
+          focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.transparent)),
           focusColor: Colors.grey[300],
           fillColor: context.scaffoldBackgroundColor,
           filled: titleFocusNode.hasFocus,
-          hintText: 'share_add_title'.tr(),
-          hintStyle: context.themeData.inputDecorationTheme.hintStyle?.copyWith(
-            fontSize: 28,
-          ),
+          hintText: 'add_a_title'.tr(),
+          hintStyle: context.themeData.inputDecorationTheme.hintStyle?.copyWith(fontSize: 28),
         ),
       ),
     );

@@ -16,13 +16,57 @@ class SyncApi {
 
   final ApiClient apiClient;
 
+  /// This endpoint requires the `syncCheckpoint.delete` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [SyncAckDeleteDto] syncAckDeleteDto (required):
+  Future<Response> deleteSyncAckWithHttpInfo(SyncAckDeleteDto syncAckDeleteDto,) async {
+    // ignore: prefer_const_declarations
+    final apiPath = r'/sync/ack';
+
+    // ignore: prefer_final_locals
+    Object? postBody = syncAckDeleteDto;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      apiPath,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// This endpoint requires the `syncCheckpoint.delete` permission.
+  ///
+  /// Parameters:
+  ///
+  /// * [SyncAckDeleteDto] syncAckDeleteDto (required):
+  Future<void> deleteSyncAck(SyncAckDeleteDto syncAckDeleteDto,) async {
+    final response = await deleteSyncAckWithHttpInfo(syncAckDeleteDto,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Performs an HTTP 'POST /sync/delta-sync' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [AssetDeltaSyncDto] assetDeltaSyncDto (required):
   Future<Response> getDeltaSyncWithHttpInfo(AssetDeltaSyncDto assetDeltaSyncDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/sync/delta-sync';
+    final apiPath = r'/sync/delta-sync';
 
     // ignore: prefer_final_locals
     Object? postBody = assetDeltaSyncDto;
@@ -35,7 +79,7 @@ class SyncApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'POST',
       queryParams,
       postBody,
@@ -69,7 +113,7 @@ class SyncApi {
   /// * [AssetFullSyncDto] assetFullSyncDto (required):
   Future<Response> getFullSyncForUserWithHttpInfo(AssetFullSyncDto assetFullSyncDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/sync/full-sync';
+    final apiPath = r'/sync/full-sync';
 
     // ignore: prefer_final_locals
     Object? postBody = assetFullSyncDto;
@@ -82,7 +126,7 @@ class SyncApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'POST',
       queryParams,
       postBody,
@@ -111,5 +155,140 @@ class SyncApi {
 
     }
     return null;
+  }
+
+  /// This endpoint requires the `syncCheckpoint.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getSyncAckWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final apiPath = r'/sync/ack';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      apiPath,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// This endpoint requires the `syncCheckpoint.read` permission.
+  Future<List<SyncAckDto>?> getSyncAck() async {
+    final response = await getSyncAckWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<SyncAckDto>') as List)
+        .cast<SyncAckDto>()
+        .toList(growable: false);
+
+    }
+    return null;
+  }
+
+  /// This endpoint requires the `sync.stream` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [SyncStreamDto] syncStreamDto (required):
+  Future<Response> getSyncStreamWithHttpInfo(SyncStreamDto syncStreamDto,) async {
+    // ignore: prefer_const_declarations
+    final apiPath = r'/sync/stream';
+
+    // ignore: prefer_final_locals
+    Object? postBody = syncStreamDto;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      apiPath,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// This endpoint requires the `sync.stream` permission.
+  ///
+  /// Parameters:
+  ///
+  /// * [SyncStreamDto] syncStreamDto (required):
+  Future<void> getSyncStream(SyncStreamDto syncStreamDto,) async {
+    final response = await getSyncStreamWithHttpInfo(syncStreamDto,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// This endpoint requires the `syncCheckpoint.update` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [SyncAckSetDto] syncAckSetDto (required):
+  Future<Response> sendSyncAckWithHttpInfo(SyncAckSetDto syncAckSetDto,) async {
+    // ignore: prefer_const_declarations
+    final apiPath = r'/sync/ack';
+
+    // ignore: prefer_final_locals
+    Object? postBody = syncAckSetDto;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      apiPath,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// This endpoint requires the `syncCheckpoint.update` permission.
+  ///
+  /// Parameters:
+  ///
+  /// * [SyncAckSetDto] syncAckSetDto (required):
+  Future<void> sendSyncAck(SyncAckSetDto syncAckSetDto,) async {
+    final response = await sendSyncAckWithHttpInfo(syncAckSetDto,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 }

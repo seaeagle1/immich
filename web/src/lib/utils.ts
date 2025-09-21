@@ -1,11 +1,14 @@
 import { NotificationType, notificationController } from '$lib/components/shared-components/notification/notification';
 import { defaultLang, langs, locales } from '$lib/constants';
+import { authManager } from '$lib/managers/auth-manager.svelte';
 import { lang } from '$lib/stores/preferences.store';
+import { serverConfig } from '$lib/stores/server-config.store';
 import { handleError } from '$lib/utils/handle-error';
 import {
   AssetJobName,
   AssetMediaSize,
   JobName,
+  MemoryType,
   finishOAuth,
   getAssetOriginalPath,
   getAssetPlaybackPath,
@@ -16,13 +19,12 @@ import {
   linkOAuthAccount,
   startOAuth,
   unlinkOAuthAccount,
-  type AssetResponseDto,
+  type MemoryResponseDto,
   type PersonResponseDto,
   type SharedLinkResponseDto,
   type UserResponseDto,
 } from '@immich/sdk';
 import { mdiCogRefreshOutline, mdiDatabaseRefreshOutline, mdiHeadSyncOutline, mdiImageRefreshOutline } from '@mdi/js';
-import { sortBy } from 'lodash-es';
 import { init, register, t } from 'svelte-i18n';
 import { derived, get } from 'svelte/store';
 
@@ -32,6 +34,12 @@ interface DownloadRequestOptions<T = unknown> {
   data?: T;
   signal?: AbortSignal;
   onDownloadProgress?: (event: ProgressEvent<XMLHttpRequestEventTarget>) => void;
+}
+
+interface DateFormatter {
+  formatDate: (date: Date) => string;
+  formatTime: (date: Date) => string;
+  formatDateTime: (date: Date) => string;
 }
 
 export const initLanguage = async () => {
@@ -65,6 +73,10 @@ class ApiError extends Error {
     super(message);
   }
 }
+
+export const sleep = (ms: number) => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
 
 export const uploadRequest = async <T>(options: UploadRequestOptions): Promise<{ data: T; status: number }> => {
   const { onUploadProgress: onProgress, data, url } = options;
@@ -146,7 +158,7 @@ export const getJobName = derived(t, ($t) => {
       [JobName.Migration]: $t('admin.migration_job'),
       [JobName.BackgroundTask]: $t('admin.background_task_job'),
       [JobName.Search]: $t('search'),
-      [JobName.Library]: $t('library'),
+      [JobName.Library]: $t('external_libraries'),
       [JobName.Notifications]: $t('notifications'),
       [JobName.BackupDatabase]: $t('admin.backup_database'),
     };
@@ -155,17 +167,10 @@ export const getJobName = derived(t, ($t) => {
   };
 });
 
-let _key: string | undefined;
 let _sharedLink: SharedLinkResponseDto | undefined;
 
-export const setKey = (key?: string) => (_key = key);
-export const getKey = (): string | undefined => _key;
 export const setSharedLink = (sharedLink: SharedLinkResponseDto) => (_sharedLink = sharedLink);
 export const getSharedLink = (): SharedLinkResponseDto | undefined => _sharedLink;
-
-export const isSharedLink = () => {
-  return !!_key;
-};
 
 const createUrl = (path: string, parameters?: Record<string, unknown>) => {
   const searchParameters = new URLSearchParams();
@@ -182,28 +187,30 @@ const createUrl = (path: string, parameters?: Record<string, unknown>) => {
   return getBaseUrl() + url.pathname + url.search + url.hash;
 };
 
-export const getAssetOriginalUrl = (options: string | { id: string; checksum?: string }) => {
+type AssetUrlOptions = { id: string; cacheKey?: string | null };
+
+export const getAssetOriginalUrl = (options: string | AssetUrlOptions) => {
   if (typeof options === 'string') {
     options = { id: options };
   }
-  const { id, checksum } = options;
-  return createUrl(getAssetOriginalPath(id), { key: getKey(), c: checksum });
+  const { id, cacheKey } = options;
+  return createUrl(getAssetOriginalPath(id), { ...authManager.params, c: cacheKey });
 };
 
-export const getAssetThumbnailUrl = (options: string | { id: string; size?: AssetMediaSize; checksum?: string }) => {
+export const getAssetThumbnailUrl = (options: string | (AssetUrlOptions & { size?: AssetMediaSize })) => {
   if (typeof options === 'string') {
     options = { id: options };
   }
-  const { id, size, checksum } = options;
-  return createUrl(getAssetThumbnailPath(id), { size, key: getKey(), c: checksum });
+  const { id, size, cacheKey } = options;
+  return createUrl(getAssetThumbnailPath(id), { ...authManager.params, size, c: cacheKey });
 };
 
-export const getAssetPlaybackUrl = (options: string | { id: string; checksum?: string }) => {
+export const getAssetPlaybackUrl = (options: string | AssetUrlOptions) => {
   if (typeof options === 'string') {
     options = { id: options };
   }
-  const { id, checksum } = options;
-  return createUrl(getAssetPlaybackPath(id), { key: getKey(), c: checksum });
+  const { id, cacheKey } = options;
+  return createUrl(getAssetPlaybackPath(id), { ...authManager.params, c: cacheKey });
 };
 
 export const getProfileImageUrl = (user: UserResponseDto) =>
@@ -260,8 +267,9 @@ export const copyToClipboard = async (secret: string) => {
   }
 };
 
-export const makeSharedLinkUrl = (externalDomain: string, key: string) => {
-  return new URL(`share/${key}`, externalDomain || window.location.origin).href;
+export const makeSharedLinkUrl = (sharedLink: SharedLinkResponseDto) => {
+  const path = sharedLink.slug ? `s/${sharedLink.slug}` : `share/${sharedLink.key}`;
+  return new URL(path, get(serverConfig).externalDomain || globalThis.location.origin).href;
 };
 
 export const oauth = {
@@ -278,12 +286,16 @@ export const oauth = {
     }
     return false;
   },
+  isAutoLaunchEnabled: (location: Location) => {
+    const value = 'autoLaunch=1';
+    return location.search.includes(value);
+  },
   authorize: async (location: Location) => {
     const $t = get(t);
     try {
       const redirectUri = location.href.split('?')[0];
       const { url } = await startOAuth({ oAuthConfigDto: { redirectUri } });
-      window.location.href = url;
+      globalThis.location.href = url;
       return true;
     } catch (error) {
       handleError(error, $t('errors.unable_to_login_with_oauth'));
@@ -320,7 +332,14 @@ export const handlePromiseError = <T>(promise: Promise<T>): void => {
 };
 
 export const memoryLaneTitle = derived(t, ($t) => {
-  return (yearsAgo: number) => $t('years_ago', { values: { years: yearsAgo } });
+  return (memory: MemoryResponseDto) => {
+    const now = new Date();
+    if (memory.type === MemoryType.OnThisDay) {
+      return $t('years_ago', { values: { years: now.getFullYear() - memory.data.year } });
+    }
+
+    return $t('unknown');
+  };
 });
 
 export const withError = async <T>(fn: () => Promise<T>): Promise<[undefined, T] | [unknown, undefined]> => {
@@ -332,9 +351,37 @@ export const withError = async <T>(fn: () => Promise<T>): Promise<[undefined, T]
   }
 };
 
-export const suggestDuplicateByFileSize = (assets: AssetResponseDto[]): AssetResponseDto | undefined => {
-  return sortBy(assets, (asset) => asset.exifInfo?.fileSizeInByte).pop();
-};
-
 // eslint-disable-next-line unicorn/prefer-code-point
 export const decodeBase64 = (data: string) => Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
+
+export function createDateFormatter(localeCode: string | undefined): DateFormatter {
+  return {
+    formatDate: (date: Date): string =>
+      date.toLocaleString(localeCode, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }),
+
+    formatTime: (date: Date): string =>
+      date.toLocaleString(localeCode, {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      }),
+
+    formatDateTime: (date: Date): string => {
+      const formattedDate = date.toLocaleString(localeCode, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+      const formattedTime = date.toLocaleString(localeCode, {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+      return `${formattedDate} ${formattedTime}`;
+    },
+  };
+}

@@ -1,27 +1,31 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
+
 import 'package:auto_route/auto_route.dart';
+import 'package:crypto/crypto.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart' hide Store;
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:immich_mobile/extensions/build_context_extensions.dart';
-import 'package:immich_mobile/providers/oauth.provider.dart';
-import 'package:immich_mobile/providers/gallery_permission.provider.dart';
-import 'package:immich_mobile/routing/router.dart';
+import 'package:immich_mobile/domain/models/store.model.dart';
 import 'package:immich_mobile/entities/store.entity.dart';
-import 'package:immich_mobile/providers/api.provider.dart';
-import 'package:immich_mobile/providers/asset.provider.dart';
-import 'package:immich_mobile/providers/authentication.provider.dart';
+import 'package:immich_mobile/extensions/build_context_extensions.dart';
+import 'package:immich_mobile/providers/auth.provider.dart';
+import 'package:immich_mobile/providers/background_sync.provider.dart';
 import 'package:immich_mobile/providers/backup/backup.provider.dart';
+import 'package:immich_mobile/providers/gallery_permission.provider.dart';
+import 'package:immich_mobile/providers/oauth.provider.dart';
 import 'package:immich_mobile/providers/server_info.provider.dart';
+import 'package:immich_mobile/routing/router.dart';
 import 'package:immich_mobile/utils/provider_utils.dart';
+import 'package:immich_mobile/utils/url_helper.dart';
 import 'package:immich_mobile/utils/version_compatibility.dart';
 import 'package:immich_mobile/widgets/common/immich_logo.dart';
 import 'package:immich_mobile/widgets/common/immich_title_text.dart';
 import 'package:immich_mobile/widgets/common/immich_toast.dart';
-import 'package:immich_mobile/utils/url_helper.dart';
 import 'package:immich_mobile/widgets/forms/login/email_input.dart';
 import 'package:immich_mobile/widgets/forms/login/loading_icon.dart';
 import 'package:immich_mobile/widgets/forms/login/login_button.dart';
@@ -40,13 +44,9 @@ class LoginForm extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final usernameController =
-        useTextEditingController.fromValue(TextEditingValue.empty);
-    final passwordController =
-        useTextEditingController.fromValue(TextEditingValue.empty);
-    final serverEndpointController =
-        useTextEditingController.fromValue(TextEditingValue.empty);
-    final apiService = ref.watch(apiServiceProvider);
+    final emailController = useTextEditingController.fromValue(TextEditingValue.empty);
+    final passwordController = useTextEditingController.fromValue(TextEditingValue.empty);
+    final serverEndpointController = useTextEditingController.fromValue(TextEditingValue.empty);
     final emailFocusNode = useFocusNode();
     final passwordFocusNode = useFocusNode();
     final serverEndpointFocusNode = useFocusNode();
@@ -55,9 +55,7 @@ class LoginForm extends HookConsumerWidget {
     final isOauthEnable = useState<bool>(false);
     final isPasswordLoginEnable = useState<bool>(false);
     final oAuthButtonLabel = useState<String>('OAuth');
-    final logoAnimationController = useAnimationController(
-      duration: const Duration(seconds: 60),
-    )..repeat();
+    final logoAnimationController = useAnimationController(duration: const Duration(seconds: 60))..repeat();
     final serverInfo = ref.watch(serverInfoProvider);
     final warningMessage = useState<String?>(null);
     final loginFormKey = GlobalKey<FormState>();
@@ -85,23 +83,18 @@ class LoginForm extends HookConsumerWidget {
 
     /// Fetch the server login credential and enables oAuth login if necessary
     /// Returns true if successful, false otherwise
-    Future<bool> getServerLoginCredential() async {
-      final serverUrl = sanitizeUrl(serverEndpointController.text);
+    Future<void> getServerAuthSettings() async {
+      final sanitizeServerUrl = sanitizeUrl(serverEndpointController.text);
+      final serverUrl = punycodeEncodeUrl(sanitizeServerUrl);
 
       // Guard empty URL
       if (serverUrl.isEmpty) {
-        ImmichToast.show(
-          context: context,
-          msg: "login_form_server_empty".tr(),
-          toastType: ToastType.error,
-        );
-
-        return false;
+        ImmichToast.show(context: context, msg: "login_form_server_empty".tr(), toastType: ToastType.error);
       }
 
       try {
         isLoadingServer.value = true;
-        final endpoint = await apiService.resolveAndSetEndpoint(serverUrl);
+        final endpoint = await ref.read(authProvider.notifier).validateServerUrl(serverUrl);
 
         // Fetch and load server config and features
         await ref.read(serverInfoProvider.notifier).getServerInfo();
@@ -112,9 +105,7 @@ class LoginForm extends HookConsumerWidget {
 
         isOauthEnable.value = features.oauthEnabled;
         isPasswordLoginEnable.value = features.passwordLogin;
-        oAuthButtonLabel.value = config.oauthButtonText.isNotEmpty
-            ? config.oauthButtonText
-            : 'OAuth';
+        oAuthButtonLabel.value = config.oauthButtonText.isNotEmpty ? config.oauthButtonText : 'OAuth';
 
         serverEndpoint.value = endpoint;
       } on ApiException catch (e) {
@@ -127,7 +118,6 @@ class LoginForm extends HookConsumerWidget {
         isOauthEnable.value = false;
         isPasswordLoginEnable.value = true;
         isLoadingServer.value = false;
-        return false;
       } on HandshakeException {
         ImmichToast.show(
           context: context,
@@ -138,7 +128,6 @@ class LoginForm extends HookConsumerWidget {
         isOauthEnable.value = false;
         isPasswordLoginEnable.value = true;
         isLoadingServer.value = false;
-        return false;
       } catch (e) {
         ImmichToast.show(
           context: context,
@@ -149,93 +138,122 @@ class LoginForm extends HookConsumerWidget {
         isOauthEnable.value = false;
         isPasswordLoginEnable.value = true;
         isLoadingServer.value = false;
-        return false;
       }
 
       isLoadingServer.value = false;
-      return true;
     }
 
-    useEffect(
-      () {
-        final serverUrl = Store.tryGet(StoreKey.serverUrl);
-        if (serverUrl != null) {
-          serverEndpointController.text = serverUrl;
-        }
-        return null;
-      },
-      [],
-    );
+    useEffect(() {
+      final serverUrl = getServerUrl();
+      if (serverUrl != null) {
+        serverEndpointController.text = serverUrl;
+      }
+      return null;
+    }, []);
 
     populateTestLoginInfo() {
-      usernameController.text = 'demo@immich.app';
+      emailController.text = 'demo@immich.app';
       passwordController.text = 'demo';
       serverEndpointController.text = 'https://demo.immich.app';
     }
 
     populateTestLoginInfo1() {
-      usernameController.text = 'testuser@email.com';
+      emailController.text = 'testuser@email.com';
       passwordController.text = 'password';
       serverEndpointController.text = 'http://10.1.15.216:2283/api';
     }
 
+    Future<void> handleSyncFlow() async {
+      final backgroundManager = ref.read(backgroundSyncProvider);
+
+      await backgroundManager.syncLocal(full: true);
+      await backgroundManager.syncRemote();
+      await backgroundManager.hashAssets();
+
+      if (Store.get(StoreKey.syncAlbums, false)) {
+        await backgroundManager.syncLinkedAlbum();
+      }
+    }
+
     login() async {
       TextInput.finishAutofillContext();
-      // Start loading
-      isLoading.value = true;
 
-      // This will remove current cache asset state of previous user login.
-      ref.read(assetProvider.notifier).clearAllAsset();
+      isLoading.value = true;
 
       // Invalidate all api repository provider instance to take into account new access token
       invalidateAllApiRepositoryProviders(ref);
 
       try {
-        final isAuthenticated =
-            await ref.read(authenticationProvider.notifier).login(
-                  usernameController.text,
-                  passwordController.text,
-                  sanitizeUrl(serverEndpointController.text),
-                );
-        if (isAuthenticated) {
-          // Resume backup (if enable) then navigate
-          if (ref.read(authenticationProvider).shouldChangePassword &&
-              !ref.read(authenticationProvider).isAdmin) {
-            context.pushRoute(const ChangePasswordRoute());
-          } else {
-            final hasPermission = await ref
-                .read(galleryPermissionNotifier.notifier)
-                .hasPermission;
-            if (hasPermission) {
-              // Don't resume the backup until we have gallery permission
-              ref.read(backupProvider.notifier).resumeBackup();
-            }
-            context.replaceRoute(const TabControllerRoute());
-          }
+        final result = await ref.read(authProvider.notifier).login(emailController.text, passwordController.text);
+
+        if (result.shouldChangePassword && !result.isAdmin) {
+          context.pushRoute(const ChangePasswordRoute());
         } else {
-          ImmichToast.show(
-            context: context,
-            msg: "login_form_failed_login".tr(),
-            toastType: ToastType.error,
-            gravity: ToastGravity.TOP,
-          );
+          final isBeta = Store.isBetaTimelineEnabled;
+          if (isBeta) {
+            await ref.read(galleryPermissionNotifier.notifier).requestGalleryPermission();
+            handleSyncFlow();
+            context.replaceRoute(const TabShellRoute());
+            return;
+          }
+          context.replaceRoute(const TabControllerRoute());
         }
+      } catch (error) {
+        ImmichToast.show(
+          context: context,
+          msg: "login_form_failed_login".tr(),
+          toastType: ToastType.error,
+          gravity: ToastGravity.TOP,
+        );
       } finally {
-        // Make sure we stop loading
         isLoading.value = false;
       }
     }
 
+    String generateRandomString(int length) {
+      const chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
+      final random = Random.secure();
+      return String.fromCharCodes(Iterable.generate(length, (_) => chars.codeUnitAt(random.nextInt(chars.length))));
+    }
+
+    List<int> randomBytes(int length) {
+      final random = Random.secure();
+      return List<int>.generate(length, (i) => random.nextInt(256));
+    }
+
+    /// Per specification, the code verifier must be 43-128 characters long
+    /// and consist of characters [A-Z, a-z, 0-9, "-", ".", "_", "~"]
+    /// https://datatracker.ietf.org/doc/html/rfc7636#section-4.1
+    String randomCodeVerifier() {
+      return base64Url.encode(randomBytes(42));
+    }
+
+    Future<String> generatePKCECodeChallenge(String codeVerifier) async {
+      var bytes = utf8.encode(codeVerifier);
+      var digest = sha256.convert(bytes);
+      return base64Url.encode(digest.bytes).replaceAll('=', '');
+    }
+
     oAuthLogin() async {
       var oAuthService = ref.watch(oAuthServiceProvider);
-      ref.watch(assetProvider.notifier).clearAllAsset();
       String? oAuthServerUrl;
 
+      final state = generateRandomString(32);
+
+      final codeVerifier = randomCodeVerifier();
+      final codeChallenge = await generatePKCECodeChallenge(codeVerifier);
+
       try {
-        oAuthServerUrl = await oAuthService
-            .getOAuthServerUrl(sanitizeUrl(serverEndpointController.text));
+        oAuthServerUrl = await oAuthService.getOAuthServerUrl(
+          sanitizeUrl(serverEndpointController.text),
+          state,
+          codeChallenge,
+        );
 
         isLoading.value = true;
+
+        // Invalidate all api repository provider instance to take into account new access token
+        invalidateAllApiRepositoryProviders(ref);
       } catch (error, stack) {
         log.severe('Error getting OAuth server Url: $error', stack);
 
@@ -251,29 +269,30 @@ class LoginForm extends HookConsumerWidget {
 
       if (oAuthServerUrl != null) {
         try {
-          final loginResponseDto =
-              await oAuthService.oAuthLogin(oAuthServerUrl);
+          final loginResponseDto = await oAuthService.oAuthLogin(oAuthServerUrl, state, codeVerifier);
 
           if (loginResponseDto == null) {
             return;
           }
 
-          log.info(
-            "Finished OAuth login with response: ${loginResponseDto.userEmail}",
-          );
+          log.info("Finished OAuth login with response: ${loginResponseDto.userEmail}");
 
           final isSuccess = await ref
-              .watch(authenticationProvider.notifier)
-              .setSuccessLoginInfo(
-                accessToken: loginResponseDto.accessToken,
-                serverUrl: sanitizeUrl(serverEndpointController.text),
-              );
+              .watch(authProvider.notifier)
+              .saveAuthInfo(accessToken: loginResponseDto.accessToken);
 
           if (isSuccess) {
             isLoading.value = false;
             final permission = ref.watch(galleryPermissionNotifier);
-            if (permission.isGranted || permission.isLimited) {
+            final isBeta = Store.isBetaTimelineEnabled;
+            if (!isBeta && (permission.isGranted || permission.isLimited)) {
               ref.watch(backupProvider.notifier).resumeBackup();
+            }
+            if (isBeta) {
+              await ref.read(galleryPermissionNotifier.notifier).requestGalleryPermission();
+              handleSyncFlow();
+              context.replaceRoute(const TabShellRoute());
+              return;
             }
             context.replaceRoute(const TabControllerRoute());
           }
@@ -309,7 +328,7 @@ class LoginForm extends HookConsumerWidget {
           ServerEndpointInput(
             controller: serverEndpointController,
             focusNode: serverEndpointFocusNode,
-            onSubmit: getServerLoginCredential,
+            onSubmit: getServerAuthSettings,
           ),
           const SizedBox(height: 18),
           Row(
@@ -327,7 +346,7 @@ class LoginForm extends HookConsumerWidget {
                   ),
                   onPressed: () => context.pushRoute(const SettingsRoute()),
                   icon: const Icon(Icons.settings_rounded),
-                  label: const SizedBox.shrink(),
+                  label: const Text(""),
                 ),
               ),
               const SizedBox(width: 1),
@@ -343,13 +362,9 @@ class LoginForm extends HookConsumerWidget {
                       ),
                     ),
                   ),
-                  onPressed:
-                      isLoadingServer.value ? null : getServerLoginCredential,
+                  onPressed: isLoadingServer.value ? null : getServerAuthSettings,
                   icon: const Icon(Icons.arrow_forward_rounded),
-                  label: const Text(
-                    'login_form_next_button',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                  ).tr(),
+                  label: const Text('next', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)).tr(),
                 ),
               ),
             ],
@@ -372,18 +387,11 @@ class LoginForm extends HookConsumerWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color:
-                context.isDarkTheme ? Colors.red.shade700 : Colors.red.shade100,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color:
-                  context.isDarkTheme ? Colors.red.shade900 : Colors.red[200]!,
-            ),
+            color: context.isDarkTheme ? Colors.red.shade700 : Colors.red.shade100,
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
+            border: Border.all(color: context.isDarkTheme ? Colors.red.shade900 : Colors.red[200]!),
           ),
-          child: Text(
-            warningMessage.value!,
-            textAlign: TextAlign.center,
-          ),
+          child: Text(warningMessage.value!, textAlign: TextAlign.center),
         ),
       );
     }
@@ -402,16 +410,12 @@ class LoginForm extends HookConsumerWidget {
             if (isPasswordLoginEnable.value) ...[
               const SizedBox(height: 18),
               EmailInput(
-                controller: usernameController,
+                controller: emailController,
                 focusNode: emailFocusNode,
                 onSubmit: passwordFocusNode.requestFocus,
               ),
               const SizedBox(height: 8),
-              PasswordInput(
-                controller: passwordController,
-                focusNode: passwordFocusNode,
-                onSubmit: login,
-              ),
+              PasswordInput(controller: passwordController, focusNode: passwordFocusNode, onSubmit: login),
             ],
 
             // Note: This used to have an AnimatedSwitcher, but was removed
@@ -423,19 +427,12 @@ class LoginForm extends HookConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 18),
-                      if (isPasswordLoginEnable.value)
-                        LoginButton(onPressed: login),
+                      if (isPasswordLoginEnable.value) LoginButton(onPressed: login),
                       if (isOauthEnable.value) ...[
                         if (isPasswordLoginEnable.value)
                           Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0,
-                            ),
-                            child: Divider(
-                              color: context.isDarkTheme
-                                  ? Colors.white
-                                  : Colors.black,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Divider(color: context.isDarkTheme ? Colors.white : Colors.black),
                           ),
                         OAuthLoginButton(
                           serverEndpointController: serverEndpointController,
@@ -446,23 +443,19 @@ class LoginForm extends HookConsumerWidget {
                       ],
                     ],
                   ),
-            if (!isOauthEnable.value && !isPasswordLoginEnable.value)
-              Center(
-                child: const Text('login_disabled').tr(),
-              ),
+            if (!isOauthEnable.value && !isPasswordLoginEnable.value) Center(child: const Text('login_disabled').tr()),
             const SizedBox(height: 12),
             TextButton.icon(
               icon: const Icon(Icons.arrow_back),
               onPressed: () => serverEndpoint.value = null,
-              label: const Text('login_form_back_button_text').tr(),
+              label: const Text('back').tr(),
             ),
           ],
         ),
       );
     }
 
-    final serverSelectionOrLogin =
-        serverEndpoint.value == null ? buildSelectServer() : buildLogin();
+    final serverSelectionOrLogin = serverEndpoint.value == null ? buildSelectServer() : buildLogin();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -474,9 +467,7 @@ class LoginForm extends HookConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(
-                    height: constraints.maxHeight / 5,
-                  ),
+                  SizedBox(height: constraints.maxHeight / 5),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -486,24 +477,16 @@ class LoginForm extends HookConsumerWidget {
                         onLongPress: () => populateTestLoginInfo1(),
                         child: RotationTransition(
                           turns: logoAnimationController,
-                          child: const ImmichLogo(
-                            heroTag: 'logo',
-                          ),
+                          child: const ImmichLogo(heroTag: 'logo'),
                         ),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.only(top: 8.0, bottom: 16),
-                        child: ImmichTitleText(),
-                      ),
+                      const Padding(padding: EdgeInsets.only(top: 8.0, bottom: 16), child: ImmichTitleText()),
                     ],
                   ),
 
                   // Note: This used to have an AnimatedSwitcher, but was removed
                   // because of https://github.com/flutter/flutter/issues/120874
-                  Form(
-                    key: loginFormKey,
-                    child: serverSelectionOrLogin,
-                  ),
+                  Form(key: loginFormKey, child: serverSelectionOrLogin),
                 ],
               ),
             ),

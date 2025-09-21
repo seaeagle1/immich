@@ -16,13 +16,16 @@ class TagsApi {
 
   final ApiClient apiClient;
 
-  /// Performs an HTTP 'PUT /tags/assets' operation and returns the [Response].
+  /// This endpoint requires the `tag.asset` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [TagBulkAssetsDto] tagBulkAssetsDto (required):
   Future<Response> bulkTagAssetsWithHttpInfo(TagBulkAssetsDto tagBulkAssetsDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/tags/assets';
+    final apiPath = r'/tags/assets';
 
     // ignore: prefer_final_locals
     Object? postBody = tagBulkAssetsDto;
@@ -35,7 +38,7 @@ class TagsApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'PUT',
       queryParams,
       postBody,
@@ -45,6 +48,8 @@ class TagsApi {
     );
   }
 
+  /// This endpoint requires the `tag.asset` permission.
+  ///
   /// Parameters:
   ///
   /// * [TagBulkAssetsDto] tagBulkAssetsDto (required):
@@ -63,13 +68,16 @@ class TagsApi {
     return null;
   }
 
-  /// Performs an HTTP 'POST /tags' operation and returns the [Response].
+  /// This endpoint requires the `tag.create` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [TagCreateDto] tagCreateDto (required):
   Future<Response> createTagWithHttpInfo(TagCreateDto tagCreateDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/tags';
+    final apiPath = r'/tags';
 
     // ignore: prefer_final_locals
     Object? postBody = tagCreateDto;
@@ -82,7 +90,7 @@ class TagsApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'POST',
       queryParams,
       postBody,
@@ -92,6 +100,8 @@ class TagsApi {
     );
   }
 
+  /// This endpoint requires the `tag.create` permission.
+  ///
   /// Parameters:
   ///
   /// * [TagCreateDto] tagCreateDto (required):
@@ -110,13 +120,16 @@ class TagsApi {
     return null;
   }
 
-  /// Performs an HTTP 'DELETE /tags/{id}' operation and returns the [Response].
+  /// This endpoint requires the `tag.delete` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> deleteTagWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/tags/{id}'
+    final apiPath = r'/tags/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -130,7 +143,7 @@ class TagsApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'DELETE',
       queryParams,
       postBody,
@@ -140,6 +153,8 @@ class TagsApi {
     );
   }
 
+  /// This endpoint requires the `tag.delete` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -150,10 +165,12 @@ class TagsApi {
     }
   }
 
-  /// Performs an HTTP 'GET /tags' operation and returns the [Response].
+  /// This endpoint requires the `tag.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
   Future<Response> getAllTagsWithHttpInfo() async {
     // ignore: prefer_const_declarations
-    final path = r'/tags';
+    final apiPath = r'/tags';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -166,7 +183,7 @@ class TagsApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -176,6 +193,7 @@ class TagsApi {
     );
   }
 
+  /// This endpoint requires the `tag.read` permission.
   Future<List<TagResponseDto>?> getAllTags() async {
     final response = await getAllTagsWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
@@ -194,13 +212,16 @@ class TagsApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /tags/{id}' operation and returns the [Response].
+  /// This endpoint requires the `tag.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> getTagByIdWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/tags/{id}'
+    final apiPath = r'/tags/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -214,7 +235,7 @@ class TagsApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -224,6 +245,8 @@ class TagsApi {
     );
   }
 
+  /// This endpoint requires the `tag.read` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -242,7 +265,10 @@ class TagsApi {
     return null;
   }
 
-  /// Performs an HTTP 'PUT /tags/{id}/assets' operation and returns the [Response].
+  /// This endpoint requires the `tag.asset` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -250,7 +276,7 @@ class TagsApi {
   /// * [BulkIdsDto] bulkIdsDto (required):
   Future<Response> tagAssetsWithHttpInfo(String id, BulkIdsDto bulkIdsDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/tags/{id}/assets'
+    final apiPath = r'/tags/{id}/assets'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -264,7 +290,7 @@ class TagsApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'PUT',
       queryParams,
       postBody,
@@ -274,6 +300,8 @@ class TagsApi {
     );
   }
 
+  /// This endpoint requires the `tag.asset` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -297,7 +325,10 @@ class TagsApi {
     return null;
   }
 
-  /// Performs an HTTP 'DELETE /tags/{id}/assets' operation and returns the [Response].
+  /// This endpoint requires the `tag.asset` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -305,7 +336,7 @@ class TagsApi {
   /// * [BulkIdsDto] bulkIdsDto (required):
   Future<Response> untagAssetsWithHttpInfo(String id, BulkIdsDto bulkIdsDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/tags/{id}/assets'
+    final apiPath = r'/tags/{id}/assets'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -319,7 +350,7 @@ class TagsApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'DELETE',
       queryParams,
       postBody,
@@ -329,6 +360,8 @@ class TagsApi {
     );
   }
 
+  /// This endpoint requires the `tag.asset` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -352,7 +385,10 @@ class TagsApi {
     return null;
   }
 
-  /// Performs an HTTP 'PUT /tags/{id}' operation and returns the [Response].
+  /// This endpoint requires the `tag.update` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -360,7 +396,7 @@ class TagsApi {
   /// * [TagUpdateDto] tagUpdateDto (required):
   Future<Response> updateTagWithHttpInfo(String id, TagUpdateDto tagUpdateDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/tags/{id}'
+    final apiPath = r'/tags/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -374,7 +410,7 @@ class TagsApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'PUT',
       queryParams,
       postBody,
@@ -384,6 +420,8 @@ class TagsApi {
     );
   }
 
+  /// This endpoint requires the `tag.update` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -404,13 +442,16 @@ class TagsApi {
     return null;
   }
 
-  /// Performs an HTTP 'PUT /tags' operation and returns the [Response].
+  /// This endpoint requires the `tag.create` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [TagUpsertDto] tagUpsertDto (required):
   Future<Response> upsertTagsWithHttpInfo(TagUpsertDto tagUpsertDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/tags';
+    final apiPath = r'/tags';
 
     // ignore: prefer_final_locals
     Object? postBody = tagUpsertDto;
@@ -423,7 +464,7 @@ class TagsApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'PUT',
       queryParams,
       postBody,
@@ -433,6 +474,8 @@ class TagsApi {
     );
   }
 
+  /// This endpoint requires the `tag.create` permission.
+  ///
   /// Parameters:
   ///
   /// * [TagUpsertDto] tagUpsertDto (required):

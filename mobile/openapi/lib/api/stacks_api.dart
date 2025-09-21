@@ -16,13 +16,16 @@ class StacksApi {
 
   final ApiClient apiClient;
 
-  /// Performs an HTTP 'POST /stacks' operation and returns the [Response].
+  /// This endpoint requires the `stack.create` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [StackCreateDto] stackCreateDto (required):
   Future<Response> createStackWithHttpInfo(StackCreateDto stackCreateDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/stacks';
+    final apiPath = r'/stacks';
 
     // ignore: prefer_final_locals
     Object? postBody = stackCreateDto;
@@ -35,7 +38,7 @@ class StacksApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'POST',
       queryParams,
       postBody,
@@ -45,6 +48,8 @@ class StacksApi {
     );
   }
 
+  /// This endpoint requires the `stack.create` permission.
+  ///
   /// Parameters:
   ///
   /// * [StackCreateDto] stackCreateDto (required):
@@ -63,13 +68,16 @@ class StacksApi {
     return null;
   }
 
-  /// Performs an HTTP 'DELETE /stacks/{id}' operation and returns the [Response].
+  /// This endpoint requires the `stack.delete` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> deleteStackWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/stacks/{id}'
+    final apiPath = r'/stacks/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -83,7 +91,7 @@ class StacksApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'DELETE',
       queryParams,
       postBody,
@@ -93,6 +101,8 @@ class StacksApi {
     );
   }
 
+  /// This endpoint requires the `stack.delete` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -103,13 +113,16 @@ class StacksApi {
     }
   }
 
-  /// Performs an HTTP 'DELETE /stacks' operation and returns the [Response].
+  /// This endpoint requires the `stack.delete` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [BulkIdsDto] bulkIdsDto (required):
   Future<Response> deleteStacksWithHttpInfo(BulkIdsDto bulkIdsDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/stacks';
+    final apiPath = r'/stacks';
 
     // ignore: prefer_final_locals
     Object? postBody = bulkIdsDto;
@@ -122,7 +135,7 @@ class StacksApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'DELETE',
       queryParams,
       postBody,
@@ -132,6 +145,8 @@ class StacksApi {
     );
   }
 
+  /// This endpoint requires the `stack.delete` permission.
+  ///
   /// Parameters:
   ///
   /// * [BulkIdsDto] bulkIdsDto (required):
@@ -142,13 +157,16 @@ class StacksApi {
     }
   }
 
-  /// Performs an HTTP 'GET /stacks/{id}' operation and returns the [Response].
+  /// This endpoint requires the `stack.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> getStackWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/stacks/{id}'
+    final apiPath = r'/stacks/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -162,7 +180,7 @@ class StacksApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -172,6 +190,8 @@ class StacksApi {
     );
   }
 
+  /// This endpoint requires the `stack.read` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -190,13 +210,66 @@ class StacksApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /stacks' operation and returns the [Response].
+  /// This endpoint requires the `stack.update` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] assetId (required):
+  ///
+  /// * [String] id (required):
+  Future<Response> removeAssetFromStackWithHttpInfo(String assetId, String id,) async {
+    // ignore: prefer_const_declarations
+    final apiPath = r'/stacks/{id}/assets/{assetId}'
+      .replaceAll('{assetId}', assetId)
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      apiPath,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// This endpoint requires the `stack.update` permission.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] assetId (required):
+  ///
+  /// * [String] id (required):
+  Future<void> removeAssetFromStack(String assetId, String id,) async {
+    final response = await removeAssetFromStackWithHttpInfo(assetId, id,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// This endpoint requires the `stack.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] primaryAssetId:
   Future<Response> searchStacksWithHttpInfo({ String? primaryAssetId, }) async {
     // ignore: prefer_const_declarations
-    final path = r'/stacks';
+    final apiPath = r'/stacks';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -213,7 +286,7 @@ class StacksApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -223,6 +296,8 @@ class StacksApi {
     );
   }
 
+  /// This endpoint requires the `stack.read` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] primaryAssetId:
@@ -244,7 +319,10 @@ class StacksApi {
     return null;
   }
 
-  /// Performs an HTTP 'PUT /stacks/{id}' operation and returns the [Response].
+  /// This endpoint requires the `stack.update` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -252,7 +330,7 @@ class StacksApi {
   /// * [StackUpdateDto] stackUpdateDto (required):
   Future<Response> updateStackWithHttpInfo(String id, StackUpdateDto stackUpdateDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/stacks/{id}'
+    final apiPath = r'/stacks/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -266,7 +344,7 @@ class StacksApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'PUT',
       queryParams,
       postBody,
@@ -276,6 +354,8 @@ class StacksApi {
     );
   }
 
+  /// This endpoint requires the `stack.update` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):

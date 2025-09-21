@@ -10,24 +10,25 @@ dynamic upgradeDto(dynamic value, String targetType) {
         addDefault(value, 'ratings', RatingsResponse().toJson());
         addDefault(value, 'people', PeopleResponse().toJson());
         addDefault(value, 'tags', TagsResponse().toJson());
+        addDefault(value, 'sharedLinks', SharedLinksResponse().toJson());
+        addDefault(value, 'cast', CastResponse().toJson());
+        addDefault(value, 'albums', {'defaultAssetOrder': 'desc'});
       }
       break;
     case 'ServerConfigDto':
       if (value is Map) {
-        addDefault(
-          value,
-          'mapLightStyleUrl',
-          'https://tiles.immich.cloud/v1/style/light.json',
-        );
-        addDefault(
-          value,
-          'mapDarkStyleUrl',
-          'https://tiles.immich.cloud/v1/style/dark.json',
-        );
+        addDefault(value, 'mapLightStyleUrl', 'https://tiles.immich.cloud/v1/style/light.json');
+        addDefault(value, 'mapDarkStyleUrl', 'https://tiles.immich.cloud/v1/style/dark.json');
       }
     case 'UserResponseDto':
       if (value is Map) {
         addDefault(value, 'profileChangedAt', DateTime.now().toIso8601String());
+      }
+      break;
+    case 'AssetResponseDto':
+      if (value is Map) {
+        addDefault(value, 'visibility', 'timeline');
+        addDefault(value, 'createdAt', DateTime.now().toIso8601String());
       }
       break;
     case 'UserAdminResponseDto':
@@ -35,6 +36,16 @@ dynamic upgradeDto(dynamic value, String targetType) {
         addDefault(value, 'profileChangedAt', DateTime.now().toIso8601String());
       }
       break;
+    case 'LoginResponseDto':
+      if (value is Map) {
+        addDefault(value, 'isOnboarded', false);
+      }
+      break;
+    case 'SyncUserV1':
+      if (value is Map) {
+        addDefault(value, 'profileChangedAt', DateTime.now().toIso8601String());
+        addDefault(value, 'hasProfileImage', false);
+      }
   }
 }
 

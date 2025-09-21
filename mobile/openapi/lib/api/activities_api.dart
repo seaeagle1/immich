@@ -16,13 +16,16 @@ class ActivitiesApi {
 
   final ApiClient apiClient;
 
-  /// Performs an HTTP 'POST /activities' operation and returns the [Response].
+  /// This endpoint requires the `activity.create` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [ActivityCreateDto] activityCreateDto (required):
   Future<Response> createActivityWithHttpInfo(ActivityCreateDto activityCreateDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/activities';
+    final apiPath = r'/activities';
 
     // ignore: prefer_final_locals
     Object? postBody = activityCreateDto;
@@ -35,7 +38,7 @@ class ActivitiesApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'POST',
       queryParams,
       postBody,
@@ -45,6 +48,8 @@ class ActivitiesApi {
     );
   }
 
+  /// This endpoint requires the `activity.create` permission.
+  ///
   /// Parameters:
   ///
   /// * [ActivityCreateDto] activityCreateDto (required):
@@ -63,13 +68,16 @@ class ActivitiesApi {
     return null;
   }
 
-  /// Performs an HTTP 'DELETE /activities/{id}' operation and returns the [Response].
+  /// This endpoint requires the `activity.delete` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> deleteActivityWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/activities/{id}'
+    final apiPath = r'/activities/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -83,7 +91,7 @@ class ActivitiesApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'DELETE',
       queryParams,
       postBody,
@@ -93,6 +101,8 @@ class ActivitiesApi {
     );
   }
 
+  /// This endpoint requires the `activity.delete` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -103,7 +113,10 @@ class ActivitiesApi {
     }
   }
 
-  /// Performs an HTTP 'GET /activities' operation and returns the [Response].
+  /// This endpoint requires the `activity.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] albumId (required):
@@ -117,7 +130,7 @@ class ActivitiesApi {
   /// * [String] userId:
   Future<Response> getActivitiesWithHttpInfo(String albumId, { String? assetId, ReactionLevel? level, ReactionType? type, String? userId, }) async {
     // ignore: prefer_const_declarations
-    final path = r'/activities';
+    final apiPath = r'/activities';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -144,7 +157,7 @@ class ActivitiesApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -154,6 +167,8 @@ class ActivitiesApi {
     );
   }
 
+  /// This endpoint requires the `activity.read` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] albumId (required):
@@ -183,7 +198,10 @@ class ActivitiesApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /activities/statistics' operation and returns the [Response].
+  /// This endpoint requires the `activity.statistics` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] albumId (required):
@@ -191,7 +209,7 @@ class ActivitiesApi {
   /// * [String] assetId:
   Future<Response> getActivityStatisticsWithHttpInfo(String albumId, { String? assetId, }) async {
     // ignore: prefer_const_declarations
-    final path = r'/activities/statistics';
+    final apiPath = r'/activities/statistics';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -209,7 +227,7 @@ class ActivitiesApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -219,6 +237,8 @@ class ActivitiesApi {
     );
   }
 
+  /// This endpoint requires the `activity.statistics` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] albumId (required):

@@ -2,6 +2,7 @@ import {
   mdiBug,
   mdiCalendarToday,
   mdiCrosshairsOff,
+  mdiCrop,
   mdiDatabase,
   mdiLeadPencil,
   mdiLockOff,
@@ -12,6 +13,12 @@ import {
   mdiTrashCan,
   mdiWeb,
   mdiWrap,
+  mdiCloudKeyOutline,
+  mdiRegex,
+  mdiCodeJson,
+  mdiClockOutline,
+  mdiAccountOutline,
+  mdiRestart,
 } from '@mdi/js';
 import Layout from '@theme/Layout';
 import React from 'react';
@@ -22,6 +29,89 @@ const withLanguage = (date: Date) => (language: string) => date.toLocaleDateStri
 type Item = Omit<TimelineItem, 'done' | 'getDateLabel'> & { date: Date };
 
 const items: Item[] = [
+  {
+    icon: mdiClockOutline,
+    iconColor: 'gray',
+    title: 'setTimeout is cursed',
+    description:
+      'The setTimeout method in JavaScript is cursed when used with small values because the implementation may or may not actually wait the specified time.',
+    link: {
+      url: 'https://github.com/immich-app/immich/pull/20655',
+      text: '#20655',
+    },
+    date: new Date(2025, 7, 4),
+  },
+  {
+    icon: mdiAccountOutline,
+    iconColor: '#DAB1DA',
+    title: 'PostgreSQL USER is cursed',
+    description:
+      'The USER keyword in PostgreSQL is cursed because you can select from it like a table, which leads to confusion if you have a table name user as well.',
+    link: {
+      url: 'https://github.com/immich-app/immich/pull/19891',
+      text: '#19891',
+    },
+    date: new Date(2025, 7, 4),
+  },
+  {
+    icon: mdiRestart,
+    iconColor: '#8395e3',
+    title: 'PostgreSQL RESET is cursed',
+    description:
+      'PostgreSQL RESET is cursed because it is impossible to RESET a PostgreSQL extension parameter if the extension has been uninstalled.',
+    link: {
+      url: 'https://github.com/immich-app/immich/pull/19363',
+      text: '#19363',
+    },
+    date: new Date(2025, 5, 20),
+  },
+  {
+    icon: mdiRegex,
+    iconColor: 'purple',
+    title: 'Zitadel Actions are cursed',
+    description:
+      "Zitadel is cursed because its custom scripting feature is executed with a JS engine that doesn't support regex named capture groups.",
+    link: {
+      url: 'https://github.com/dop251/goja',
+      text: 'Go JS engine',
+    },
+    date: new Date(2025, 5, 4),
+  },
+  {
+    icon: mdiCloudKeyOutline,
+    iconColor: '#0078d4',
+    title: 'Entra is cursed',
+    description:
+      "Microsoft Entra supports PKCE, but doesn't include it in its OpenID discovery document. This leads to clients thinking PKCE isn't available.",
+    link: {
+      url: 'https://github.com/immich-app/immich/pull/18725',
+      text: '#18725',
+    },
+    date: new Date(2025, 4, 30),
+  },
+  {
+    icon: mdiCrop,
+    iconColor: 'tomato',
+    title: 'Image dimensions in EXIF metadata are cursed',
+    description:
+      'The dimensions in EXIF metadata can be different from the actual dimensions of the image, causing issues with cropping and resizing.',
+    link: {
+      url: 'https://github.com/immich-app/immich/pull/17974',
+      text: '#17974',
+    },
+    date: new Date(2025, 4, 5),
+  },
+  {
+    icon: mdiCodeJson,
+    iconColor: 'yellow',
+    title: 'YAML whitespace is cursed',
+    description: 'YAML whitespaces are often handled in unintuitive ways.',
+    link: {
+      url: 'https://github.com/immich-app/immich/pull/17309',
+      text: '#17309',
+    },
+    date: new Date(2025, 3, 1),
+  },
   {
     icon: mdiMicrosoftWindows,
     iconColor: '#357EC7',

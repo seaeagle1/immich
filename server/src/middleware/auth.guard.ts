@@ -1,35 +1,45 @@
 import {
   CanActivate,
   ExecutionContext,
-  Inject,
   Injectable,
   SetMetadata,
   applyDecorators,
   createParamDecorator,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ApiBearerAuth, ApiCookieAuth, ApiOkResponse, ApiQuery, ApiSecurity } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCookieAuth, ApiExtension, ApiOkResponse, ApiQuery, ApiSecurity } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AuthDto } from 'src/dtos/auth.dto';
-import { ImmichQuery, MetadataKey, Permission } from 'src/enum';
-import { ILoggerRepository } from 'src/interfaces/logger.interface';
+import { ApiCustomExtension, ImmichQuery, MetadataKey, Permission } from 'src/enum';
+import { LoggingRepository } from 'src/repositories/logging.repository';
 import { AuthService, LoginDetails } from 'src/services/auth.service';
 import { UAParser } from 'ua-parser-js';
 
 type AdminRoute = { admin?: true };
 type SharedLinkRoute = { sharedLink?: true };
-type AuthenticatedOptions = { permission?: Permission } & (AdminRoute | SharedLinkRoute);
+type AuthenticatedOptions = { permission?: Permission | false } & (AdminRoute | SharedLinkRoute);
 
-export const Authenticated = (options?: AuthenticatedOptions): MethodDecorator => {
+export const Authenticated = (options: AuthenticatedOptions = {}): MethodDecorator => {
   const decorators: MethodDecorator[] = [
     ApiBearerAuth(),
     ApiCookieAuth(),
-    ApiSecurity(MetadataKey.API_KEY_SECURITY),
-    SetMetadata(MetadataKey.AUTH_ROUTE, options || {}),
+    ApiSecurity(MetadataKey.ApiKeySecurity),
+    SetMetadata(MetadataKey.AuthRoute, options),
   ];
 
+  if ((options as AdminRoute).admin) {
+    decorators.push(ApiExtension(ApiCustomExtension.AdminOnly, true));
+  }
+
+  if (options?.permission) {
+    decorators.push(ApiExtension(ApiCustomExtension.Permission, options.permission));
+  }
+
   if ((options as SharedLinkRoute)?.sharedLink) {
-    decorators.push(ApiQuery({ name: ImmichQuery.SHARED_LINK_KEY, type: String, required: false }));
+    decorators.push(
+      ApiQuery({ name: ImmichQuery.SharedLinkKey, type: String, required: false }),
+      ApiQuery({ name: ImmichQuery.SharedLinkSlug, type: String, required: false }),
+    );
   }
 
   return applyDecorators(...decorators);
@@ -49,7 +59,7 @@ export const GetLoginDetails = createParamDecorator((data, context: ExecutionCon
   const userAgent = UAParser(request.headers['user-agent']);
 
   return {
-    clientIp: request.ip,
+    clientIp: request.ip ?? '',
     isSecure: request.secure,
     deviceType: userAgent.browser.name || userAgent.device.type || (request.headers.devicemodel as string) || '',
     deviceOS: userAgent.os.name || (request.headers.devicetype as string) || '',
@@ -67,7 +77,7 @@ export interface AuthenticatedRequest extends Request {
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    @Inject(ILoggerRepository) private logger: ILoggerRepository,
+    private logger: LoggingRepository,
     private reflector: Reflector,
     private authService: AuthService,
   ) {
@@ -77,7 +87,7 @@ export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const targets = [context.getHandler()];
 
-    const options = this.reflector.getAllAndOverride<AuthenticatedOptions | undefined>(MetadataKey.AUTH_ROUTE, targets);
+    const options = this.reflector.getAllAndOverride<AuthenticatedOptions | undefined>(MetadataKey.AuthRoute, targets);
     if (!options) {
       return true;
     }

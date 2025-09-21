@@ -40,13 +40,9 @@ const projects: CommunityProjectProps[] = [
   },
   {
     title: 'Lightroom Immich Plugin: lrc-immich-plugin',
-    description: 'Another Lightroom plugin to publish or export photos from Lightroom to Immich.',
-    url: 'https://github.com/bmachek/lrc-immich-plugin',
-  },
-  {
-    title: 'Immich Duplicate Finder',
-    description: 'Webapp that uses machine learning to identify near-duplicate images.',
-    url: 'https://github.com/vale46n1/immich_duplicate_finder',
+    description:
+      'Lightroom plugin to publish, export photos from Lightroom to Immich. Import from Immich to Lightroom is also supported.',
+    url: 'https://blog.fokuspunk.de/lrc-immich-plugin/',
   },
   {
     title: 'Immich-Tiktok-Remover',
@@ -88,6 +84,41 @@ const projects: CommunityProjectProps[] = [
     description:
       'Share your Immich photos and albums in a safe way without exposing your Immich instance to the public.',
     url: 'https://github.com/alangrainger/immich-public-proxy',
+  },
+  {
+    title: 'Immich Kodi',
+    description: 'Unofficial Kodi plugin for Immich.',
+    url: 'https://github.com/vladd11/immich-kodi',
+  },
+  {
+    title: 'Immich Downloader',
+    description: 'Downloads a configurable number of random photos based on people or album ID.',
+    url: 'https://github.com/jon6fingrs/immich-dl',
+  },
+  {
+    title: 'Immich Upload Optimizer',
+    description: 'Automatically optimize files uploaded to Immich in order to save storage space',
+    url: 'https://github.com/miguelangel-nubla/immich-upload-optimizer',
+  },
+  {
+    title: 'Immich Machine Learning Load Balancer',
+    description: 'Speed up your machine learning by load balancing your requests to multiple computers',
+    url: 'https://github.com/apetersson/immich_ml_balancer',
+  },
+  {
+    title: 'Immich Drop Uploader',
+    description: 'A tiny, zero-login web app for collecting photos/videos from anyone into your Immich server.',
+    url: 'https://github.com/Nasogaa/immich-drop',
+  },
+  {
+    title: 'Immich Birthday Sync',
+    description: 'Bulk-upload and -download birthdays, with CardDAV sync support',
+    url: 'https://github.com/sid3windr/immich-birthday',
+  },
+  {
+    title: 'Immich Stack',
+    description: 'Auto-stack photos with identical filenames and differing extensions (i.e. JPG+RAW)',
+    url: 'https://github.com/sid3windr/immich-stack',
   },
 ];
 

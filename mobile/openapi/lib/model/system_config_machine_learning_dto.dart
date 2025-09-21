@@ -13,12 +13,15 @@ part of openapi.api;
 class SystemConfigMachineLearningDto {
   /// Returns a new [SystemConfigMachineLearningDto] instance.
   SystemConfigMachineLearningDto({
+    required this.availabilityChecks,
     required this.clip,
     required this.duplicateDetection,
     required this.enabled,
     required this.facialRecognition,
-    required this.url,
+    this.urls = const [],
   });
+
+  MachineLearningAvailabilityChecksDto availabilityChecks;
 
   CLIPConfig clip;
 
@@ -28,35 +31,38 @@ class SystemConfigMachineLearningDto {
 
   FacialRecognitionConfig facialRecognition;
 
-  String url;
+  List<String> urls;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is SystemConfigMachineLearningDto &&
+    other.availabilityChecks == availabilityChecks &&
     other.clip == clip &&
     other.duplicateDetection == duplicateDetection &&
     other.enabled == enabled &&
     other.facialRecognition == facialRecognition &&
-    other.url == url;
+    _deepEquality.equals(other.urls, urls);
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
+    (availabilityChecks.hashCode) +
     (clip.hashCode) +
     (duplicateDetection.hashCode) +
     (enabled.hashCode) +
     (facialRecognition.hashCode) +
-    (url.hashCode);
+    (urls.hashCode);
 
   @override
-  String toString() => 'SystemConfigMachineLearningDto[clip=$clip, duplicateDetection=$duplicateDetection, enabled=$enabled, facialRecognition=$facialRecognition, url=$url]';
+  String toString() => 'SystemConfigMachineLearningDto[availabilityChecks=$availabilityChecks, clip=$clip, duplicateDetection=$duplicateDetection, enabled=$enabled, facialRecognition=$facialRecognition, urls=$urls]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
+      json[r'availabilityChecks'] = this.availabilityChecks;
       json[r'clip'] = this.clip;
       json[r'duplicateDetection'] = this.duplicateDetection;
       json[r'enabled'] = this.enabled;
       json[r'facialRecognition'] = this.facialRecognition;
-      json[r'url'] = this.url;
+      json[r'urls'] = this.urls;
     return json;
   }
 
@@ -69,11 +75,14 @@ class SystemConfigMachineLearningDto {
       final json = value.cast<String, dynamic>();
 
       return SystemConfigMachineLearningDto(
+        availabilityChecks: MachineLearningAvailabilityChecksDto.fromJson(json[r'availabilityChecks'])!,
         clip: CLIPConfig.fromJson(json[r'clip'])!,
         duplicateDetection: DuplicateDetectionConfig.fromJson(json[r'duplicateDetection'])!,
         enabled: mapValueOfType<bool>(json, r'enabled')!,
         facialRecognition: FacialRecognitionConfig.fromJson(json[r'facialRecognition'])!,
-        url: mapValueOfType<String>(json, r'url')!,
+        urls: json[r'urls'] is Iterable
+            ? (json[r'urls'] as Iterable).cast<String>().toList(growable: false)
+            : const [],
       );
     }
     return null;
@@ -121,11 +130,12 @@ class SystemConfigMachineLearningDto {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
+    'availabilityChecks',
     'clip',
     'duplicateDetection',
     'enabled',
     'facialRecognition',
-    'url',
+    'urls',
   };
 }
 

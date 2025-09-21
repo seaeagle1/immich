@@ -16,13 +16,16 @@ class UsersAdminApi {
 
   final ApiClient apiClient;
 
-  /// Performs an HTTP 'POST /admin/users' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `adminUser.create` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [UserAdminCreateDto] userAdminCreateDto (required):
   Future<Response> createUserAdminWithHttpInfo(UserAdminCreateDto userAdminCreateDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/admin/users';
+    final apiPath = r'/admin/users';
 
     // ignore: prefer_final_locals
     Object? postBody = userAdminCreateDto;
@@ -35,7 +38,7 @@ class UsersAdminApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'POST',
       queryParams,
       postBody,
@@ -45,6 +48,8 @@ class UsersAdminApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `adminUser.create` permission.
+  ///
   /// Parameters:
   ///
   /// * [UserAdminCreateDto] userAdminCreateDto (required):
@@ -63,7 +68,10 @@ class UsersAdminApi {
     return null;
   }
 
-  /// Performs an HTTP 'DELETE /admin/users/{id}' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `adminUser.delete` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -71,7 +79,7 @@ class UsersAdminApi {
   /// * [UserAdminDeleteDto] userAdminDeleteDto (required):
   Future<Response> deleteUserAdminWithHttpInfo(String id, UserAdminDeleteDto userAdminDeleteDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/admin/users/{id}'
+    final apiPath = r'/admin/users/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -85,7 +93,7 @@ class UsersAdminApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'DELETE',
       queryParams,
       postBody,
@@ -95,6 +103,8 @@ class UsersAdminApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `adminUser.delete` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -115,13 +125,16 @@ class UsersAdminApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /admin/users/{id}' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `adminUser.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> getUserAdminWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/admin/users/{id}'
+    final apiPath = r'/admin/users/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -135,7 +148,7 @@ class UsersAdminApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -145,6 +158,8 @@ class UsersAdminApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `adminUser.read` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -163,13 +178,16 @@ class UsersAdminApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /admin/users/{id}/preferences' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `adminUser.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> getUserPreferencesAdminWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/admin/users/{id}/preferences'
+    final apiPath = r'/admin/users/{id}/preferences'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -183,7 +201,7 @@ class UsersAdminApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -193,6 +211,8 @@ class UsersAdminApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `adminUser.read` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -211,13 +231,91 @@ class UsersAdminApi {
     return null;
   }
 
-  /// Performs an HTTP 'POST /admin/users/{id}/restore' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `adminUser.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [bool] isFavorite:
+  ///
+  /// * [bool] isTrashed:
+  ///
+  /// * [AssetVisibility] visibility:
+  Future<Response> getUserStatisticsAdminWithHttpInfo(String id, { bool? isFavorite, bool? isTrashed, AssetVisibility? visibility, }) async {
+    // ignore: prefer_const_declarations
+    final apiPath = r'/admin/users/{id}/statistics'
+      .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (isFavorite != null) {
+      queryParams.addAll(_queryParams('', 'isFavorite', isFavorite));
+    }
+    if (isTrashed != null) {
+      queryParams.addAll(_queryParams('', 'isTrashed', isTrashed));
+    }
+    if (visibility != null) {
+      queryParams.addAll(_queryParams('', 'visibility', visibility));
+    }
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      apiPath,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// This endpoint is an admin-only route, and requires the `adminUser.read` permission.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [bool] isFavorite:
+  ///
+  /// * [bool] isTrashed:
+  ///
+  /// * [AssetVisibility] visibility:
+  Future<AssetStatsResponseDto?> getUserStatisticsAdmin(String id, { bool? isFavorite, bool? isTrashed, AssetVisibility? visibility, }) async {
+    final response = await getUserStatisticsAdminWithHttpInfo(id,  isFavorite: isFavorite, isTrashed: isTrashed, visibility: visibility, );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'AssetStatsResponseDto',) as AssetStatsResponseDto;
+    
+    }
+    return null;
+  }
+
+  /// This endpoint is an admin-only route, and requires the `adminUser.delete` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> restoreUserAdminWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/admin/users/{id}/restore'
+    final apiPath = r'/admin/users/{id}/restore'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -231,7 +329,7 @@ class UsersAdminApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'POST',
       queryParams,
       postBody,
@@ -241,6 +339,8 @@ class UsersAdminApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `adminUser.delete` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -259,13 +359,18 @@ class UsersAdminApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /admin/users' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `adminUser.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
+  /// * [String] id:
+  ///
   /// * [bool] withDeleted:
-  Future<Response> searchUsersAdminWithHttpInfo({ bool? withDeleted, }) async {
+  Future<Response> searchUsersAdminWithHttpInfo({ String? id, bool? withDeleted, }) async {
     // ignore: prefer_const_declarations
-    final path = r'/admin/users';
+    final apiPath = r'/admin/users';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -274,6 +379,9 @@ class UsersAdminApi {
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
+    if (id != null) {
+      queryParams.addAll(_queryParams('', 'id', id));
+    }
     if (withDeleted != null) {
       queryParams.addAll(_queryParams('', 'withDeleted', withDeleted));
     }
@@ -282,7 +390,7 @@ class UsersAdminApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -292,11 +400,15 @@ class UsersAdminApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `adminUser.read` permission.
+  ///
   /// Parameters:
   ///
+  /// * [String] id:
+  ///
   /// * [bool] withDeleted:
-  Future<List<UserAdminResponseDto>?> searchUsersAdmin({ bool? withDeleted, }) async {
-    final response = await searchUsersAdminWithHttpInfo( withDeleted: withDeleted, );
+  Future<List<UserAdminResponseDto>?> searchUsersAdmin({ String? id, bool? withDeleted, }) async {
+    final response = await searchUsersAdminWithHttpInfo( id: id, withDeleted: withDeleted, );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -313,7 +425,10 @@ class UsersAdminApi {
     return null;
   }
 
-  /// Performs an HTTP 'PUT /admin/users/{id}' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `adminUser.update` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -321,7 +436,7 @@ class UsersAdminApi {
   /// * [UserAdminUpdateDto] userAdminUpdateDto (required):
   Future<Response> updateUserAdminWithHttpInfo(String id, UserAdminUpdateDto userAdminUpdateDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/admin/users/{id}'
+    final apiPath = r'/admin/users/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -335,7 +450,7 @@ class UsersAdminApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'PUT',
       queryParams,
       postBody,
@@ -345,6 +460,8 @@ class UsersAdminApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `adminUser.update` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -365,7 +482,10 @@ class UsersAdminApi {
     return null;
   }
 
-  /// Performs an HTTP 'PUT /admin/users/{id}/preferences' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `adminUser.update` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -373,7 +493,7 @@ class UsersAdminApi {
   /// * [UserPreferencesUpdateDto] userPreferencesUpdateDto (required):
   Future<Response> updateUserPreferencesAdminWithHttpInfo(String id, UserPreferencesUpdateDto userPreferencesUpdateDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/admin/users/{id}/preferences'
+    final apiPath = r'/admin/users/{id}/preferences'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -387,7 +507,7 @@ class UsersAdminApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'PUT',
       queryParams,
       postBody,
@@ -397,6 +517,8 @@ class UsersAdminApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `adminUser.update` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):

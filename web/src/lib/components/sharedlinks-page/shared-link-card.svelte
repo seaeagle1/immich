@@ -1,24 +1,23 @@
 <script lang="ts">
-  import Badge from '$lib/components/elements/badge.svelte';
-  import ShareCover from '$lib/components/sharedlinks-page/covers/share-cover.svelte';
-  import { AppRoute } from '$lib/constants';
-  import { locale } from '$lib/stores/preferences.store';
-  import { SharedLinkType, type SharedLinkResponseDto } from '@immich/sdk';
-  import { DateTime, type ToRelativeUnit } from 'luxon';
-  import { t } from 'svelte-i18n';
+  import ButtonContextMenu from '$lib/components/shared-components/context-menu/button-context-menu.svelte';
+  import SharedLinkCopy from '$lib/components/sharedlinks-page/actions/shared-link-copy.svelte';
   import SharedLinkDelete from '$lib/components/sharedlinks-page/actions/shared-link-delete.svelte';
   import SharedLinkEdit from '$lib/components/sharedlinks-page/actions/shared-link-edit.svelte';
-  import SharedLinkCopy from '$lib/components/sharedlinks-page/actions/shared-link-copy.svelte';
-  import ButtonContextMenu from '$lib/components/shared-components/context-menu/button-context-menu.svelte';
+  import ShareCover from '$lib/components/sharedlinks-page/covers/share-cover.svelte';
+  import { AppRoute } from '$lib/constants';
+  import Badge from '$lib/elements/Badge.svelte';
+  import { locale } from '$lib/stores/preferences.store';
+  import { SharedLinkType, type SharedLinkResponseDto } from '@immich/sdk';
   import { mdiDotsVertical } from '@mdi/js';
+  import { DateTime, type ToRelativeUnit } from 'luxon';
+  import { t } from 'svelte-i18n';
 
   interface Props {
     link: SharedLinkResponseDto;
     onDelete: () => void;
-    onEdit: () => void;
   }
 
-  let { link, onDelete, onEdit }: Props = $props();
+  let { link, onDelete }: Props = $props();
 
   let now = DateTime.now();
   let expiresAt = $derived(link.expiresAt ? DateTime.fromISO(link.expiresAt) : undefined);
@@ -62,9 +61,7 @@
         </div>
 
         <div class="text-sm pb-2">
-          <p
-            class="flex place-items-center gap-2 text-immich-primary dark:text-immich-dark-primary break-all uppercase"
-          >
+          <p class="flex place-items-center gap-2 text-primary break-all uppercase">
             {#if link.type === SharedLinkType.Album}
               {link.album?.albumName}
             {:else if link.type === SharedLinkType.Individual}
@@ -86,33 +83,34 @@
         {/if}
 
         {#if link.showMetadata}
-          <Badge rounded="full"><span class="text-xs px-1">{$t('exif').toUpperCase()}</span></Badge>
+          <Badge rounded="full"><span class="uppercase text-xs px-1">{$t('exif')}</span></Badge>
         {/if}
 
         {#if link.password}
           <Badge rounded="full"><span class="text-xs px-1">{$t('password')}</span></Badge>
         {/if}
+        {#if link.slug}
+          <Badge rounded="full"><span class="text-xs px-1">{$t('custom_url')}</span></Badge>
+        {/if}
       </div>
     </div>
   </svelte:element>
-
   <div class="flex flex-auto flex-col place-content-center place-items-end text-end ms-4">
     <div class="sm:flex hidden">
-      <SharedLinkEdit {onEdit} />
+      <SharedLinkEdit sharedLink={link} />
       <SharedLinkCopy {link} />
       <SharedLinkDelete {onDelete} />
     </div>
 
     <div class="sm:hidden">
       <ButtonContextMenu
-        color="transparent"
+        color="primary"
         title={$t('shared_link_options')}
         icon={mdiDotsVertical}
-        size="24"
-        padding="3"
+        size="large"
         hideContent
       >
-        <SharedLinkEdit menuItem {onEdit} />
+        <SharedLinkEdit menuItem sharedLink={link} />
         <SharedLinkCopy menuItem {link} />
         <SharedLinkDelete menuItem {onDelete} />
       </ButtonContextMenu>

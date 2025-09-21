@@ -22,6 +22,7 @@ describe('mimeTypes', () => {
     { mimetype: 'image/heif', extension: '.heif' },
     { mimetype: 'image/hif', extension: '.hif' },
     { mimetype: 'image/iiq', extension: '.iiq' },
+    { mimetype: 'image/jp2', extension: '.jp2' },
     { mimetype: 'image/jpeg', extension: '.jpe' },
     { mimetype: 'image/jpeg', extension: '.jpeg' },
     { mimetype: 'image/jpeg', extension: '.jpg' },
@@ -78,6 +79,7 @@ describe('mimeTypes', () => {
     { mimetype: 'video/3gpp', extension: '.3gp' },
     { mimetype: 'video/3gpp', extension: '.3gpp' },
     { mimetype: 'video/avi', extension: '.avi' },
+    { mimetype: 'video/mp2t', extension: '.m2t' },
     { mimetype: 'video/mp2t', extension: '.m2ts' },
     { mimetype: 'video/mp2t', extension: '.mts' },
     { mimetype: 'video/mp4', extension: '.mp4' },
@@ -92,11 +94,26 @@ describe('mimeTypes', () => {
     { mimetype: 'video/x-matroska', extension: '.mkv' },
     { mimetype: 'video/x-ms-wmv', extension: '.wmv' },
     { mimetype: 'video/x-msvideo', extension: '.avi' },
+    { mimetype: 'video/mpeg', extension: '.vob' },
   ]) {
     it(`should map ${extension} to ${mimetype}`, () => {
       expect({ ...mimeTypes.image, ...mimeTypes.video }[extension]).toContain(mimetype);
     });
   }
+
+  describe('toExtension', () => {
+    it('should get an extension for a png file', () => {
+      expect(mimeTypes.toExtension('image/png')).toEqual('.png');
+    });
+
+    it('should get an extension for a jpeg file', () => {
+      expect(mimeTypes.toExtension('image/jpeg')).toEqual('.jpg');
+    });
+
+    it('should get an extension from a webp file', () => {
+      expect(mimeTypes.toExtension('image/webp')).toEqual('.webp');
+    });
+  });
 
   describe('profile', () => {
     it('should contain only lowercase mime types', () => {

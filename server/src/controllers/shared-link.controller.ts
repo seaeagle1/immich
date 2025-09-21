@@ -1,4 +1,18 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { AssetIdsResponseDto } from 'src/dtos/asset-ids.response.dto';
@@ -9,6 +23,7 @@ import {
   SharedLinkEditDto,
   SharedLinkPasswordDto,
   SharedLinkResponseDto,
+  SharedLinkSearchDto,
 } from 'src/dtos/shared-link.dto';
 import { ImmichCookie, Permission } from 'src/enum';
 import { Auth, Authenticated, GetLoginDetails } from 'src/middleware/auth.guard';
@@ -23,9 +38,9 @@ export class SharedLinkController {
   constructor(private service: SharedLinkService) {}
 
   @Get()
-  @Authenticated({ permission: Permission.SHARED_LINK_READ })
-  getAllSharedLinks(@Auth() auth: AuthDto): Promise<SharedLinkResponseDto[]> {
-    return this.service.getAll(auth);
+  @Authenticated({ permission: Permission.SharedLinkRead })
+  getAllSharedLinks(@Auth() auth: AuthDto, @Query() dto: SharedLinkSearchDto): Promise<SharedLinkResponseDto[]> {
+    return this.service.getAll(auth, dto);
   }
 
   @Get('me')
@@ -37,31 +52,31 @@ export class SharedLinkController {
     @Res({ passthrough: true }) res: Response,
     @GetLoginDetails() loginDetails: LoginDetails,
   ): Promise<SharedLinkResponseDto> {
-    const sharedLinkToken = request.cookies?.[ImmichCookie.SHARED_LINK_TOKEN];
+    const sharedLinkToken = request.cookies?.[ImmichCookie.SharedLinkToken];
     if (sharedLinkToken) {
       dto.token = sharedLinkToken;
     }
     const body = await this.service.getMine(auth, dto);
     return respondWithCookie(res, body, {
       isSecure: loginDetails.isSecure,
-      values: body.token ? [{ key: ImmichCookie.SHARED_LINK_TOKEN, value: body.token }] : [],
+      values: body.token ? [{ key: ImmichCookie.SharedLinkToken, value: body.token }] : [],
     });
   }
 
   @Get(':id')
-  @Authenticated({ permission: Permission.SHARED_LINK_READ })
+  @Authenticated({ permission: Permission.SharedLinkRead })
   getSharedLinkById(@Auth() auth: AuthDto, @Param() { id }: UUIDParamDto): Promise<SharedLinkResponseDto> {
     return this.service.get(auth, id);
   }
 
   @Post()
-  @Authenticated({ permission: Permission.SHARED_LINK_CREATE })
+  @Authenticated({ permission: Permission.SharedLinkCreate })
   createSharedLink(@Auth() auth: AuthDto, @Body() dto: SharedLinkCreateDto) {
     return this.service.create(auth, dto);
   }
 
   @Patch(':id')
-  @Authenticated({ permission: Permission.SHARED_LINK_UPDATE })
+  @Authenticated({ permission: Permission.SharedLinkUpdate })
   updateSharedLink(
     @Auth() auth: AuthDto,
     @Param() { id }: UUIDParamDto,
@@ -71,7 +86,8 @@ export class SharedLinkController {
   }
 
   @Delete(':id')
-  @Authenticated({ permission: Permission.SHARED_LINK_DELETE })
+  @Authenticated({ permission: Permission.SharedLinkDelete })
+  @HttpCode(HttpStatus.NO_CONTENT)
   removeSharedLink(@Auth() auth: AuthDto, @Param() { id }: UUIDParamDto): Promise<void> {
     return this.service.remove(auth, id);
   }

@@ -1,20 +1,22 @@
 <script lang="ts">
-  import { type PersonResponseDto } from '@immich/sdk';
-  import FaceThumbnail from './face-thumbnail.svelte';
   import SearchPeople from '$lib/components/faces-page/people-search.svelte';
+  import { type PersonResponseDto } from '@immich/sdk';
   import { t } from 'svelte-i18n';
+  import FaceThumbnail from './face-thumbnail.svelte';
+  import { mdiSwapVertical } from '@mdi/js';
+  import { IconButton } from '@immich/ui';
 
   interface Props {
     screenHeight: number;
     people: PersonResponseDto[];
     peopleToNotShow: PersonResponseDto[];
     onSelect: (person: PersonResponseDto) => void;
+    handleSearch?: (sortFaces: boolean) => void;
   }
 
-  let { screenHeight, people, peopleToNotShow, onSelect }: Props = $props();
-
+  let { screenHeight, people, peopleToNotShow, onSelect, handleSearch }: Props = $props();
   let searchedPeopleLocal: PersonResponseDto[] = $state([]);
-
+  let sortBySimilarirty = $state(false);
   let name = $state('');
 
   const showPeople = $derived(
@@ -24,12 +26,28 @@
   );
 </script>
 
-<div class=" w-40 sm:w-48 md:w-96 h-14 mb-8">
-  <SearchPeople type="searchBar" placeholder={$t('search_people')} bind:searchName={name} bind:searchedPeopleLocal />
+<div class="w-40 sm:w-48 md:w-full h-14 flex gap-4 place-items-center">
+  <div class="md:w-96">
+    <SearchPeople type="searchBar" placeholder={$t('search_people')} bind:searchName={name} bind:searchedPeopleLocal />
+  </div>
+
+  {#if handleSearch}
+    <IconButton
+      shape="round"
+      color="secondary"
+      variant="ghost"
+      icon={mdiSwapVertical}
+      onclick={() => {
+        sortBySimilarirty = !sortBySimilarirty;
+        handleSearch(sortBySimilarirty);
+      }}
+      aria-label={$t('sort_people_by_similarity')}
+    />
+  {/if}
 </div>
 
 <div
-  class="immich-scrollbar overflow-y-auto rounded-3xl bg-gray-200 p-10 dark:bg-immich-dark-gray"
+  class="immich-scrollbar overflow-y-auto rounded-3xl bg-gray-200 p-10 dark:bg-immich-dark-gray mt-6"
   style:max-height={screenHeight - 400 + 'px'}
 >
   <div class="grid-col-2 grid gap-8 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">

@@ -34,19 +34,14 @@ class MapBottomSheet extends HookConsumerWidget {
 
     void handleMapEvents(MapEvent event) async {
       if (event is MapCloseBottomSheet) {
-        sheetController.animateTo(
-          0.1,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.linearToEaseOut,
-        );
+        sheetController.animateTo(0.1, duration: const Duration(milliseconds: 200), curve: Curves.linearToEaseOut);
       }
     }
 
     useOnStreamChange<MapEvent>(mapEventStream, onData: handleMapEvents);
 
     bool onScrollNotification(DraggableScrollableNotification notification) {
-      isBottomSheetOpened.value =
-          notification.extent > (notification.maxExtent * 0.9);
+      isBottomSheetOpened.value = notification.extent > (notification.maxExtent * 0.9);
       bottomSheetOffset.value = notification.extent;
       // do not bubble
       return true;
@@ -59,9 +54,10 @@ class MapBottomSheet extends HookConsumerWidget {
           child: DraggableScrollableSheet(
             controller: sheetController,
             minChildSize: sheetMinExtent,
-            maxChildSize: 0.5,
+            maxChildSize: 0.8,
             initialChildSize: sheetMinExtent,
             snap: true,
+            snapSizes: [sheetMinExtent, 0.5, 0.8],
             shouldCloseOnMinExtent: false,
             builder: (ctx, scrollController) => MapAssetGrid(
               controller: scrollController,
@@ -69,27 +65,28 @@ class MapBottomSheet extends HookConsumerWidget {
               selectedAssets: selectedAssets,
               onAssetsSelected: onAssetsSelected,
               // Do not bother with the event if the bottom sheet is not user scrolled
-              onGridAssetChanged: (assetId) => isBottomSheetOpened.value
-                  ? onGridAssetChanged?.call(assetId)
-                  : null,
+              onGridAssetChanged: (assetId) => isBottomSheetOpened.value ? onGridAssetChanged?.call(assetId) : null,
               onZoomToAsset: onZoomToAsset,
             ),
           ),
         ),
         ValueListenableBuilder(
           valueListenable: bottomSheetOffset,
-          builder: (ctx, value, child) => Positioned(
-            right: 0,
-            bottom: context.height * (value + 0.02),
-            child: child!,
-          ),
-          child: ElevatedButton(
-            onPressed: onZoomToLocation,
-            style: ElevatedButton.styleFrom(
-              shape: const CircleBorder(),
-            ),
-            child: const Icon(Icons.my_location),
-          ),
+          builder: (context, value, child) {
+            return Positioned(
+              right: 0,
+              bottom: context.height * (value + 0.02),
+              child: AnimatedOpacity(
+                opacity: value < 0.8 ? 1 : 0,
+                duration: const Duration(milliseconds: 150),
+                child: ElevatedButton(
+                  onPressed: onZoomToLocation,
+                  style: ElevatedButton.styleFrom(shape: const CircleBorder()),
+                  child: const Icon(Icons.my_location),
+                ),
+              ),
+            );
+          },
         ),
       ],
     );

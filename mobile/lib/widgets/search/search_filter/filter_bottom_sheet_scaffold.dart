@@ -33,10 +33,7 @@ class FilterBottomSheetScaffold extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Text(
-              title,
-              style: context.textTheme.headlineSmall,
-            ),
+            child: Text(title, style: context.textTheme.headlineSmall),
           ),
           buildChildWidget(),
           Padding(
@@ -49,10 +46,11 @@ class FilterBottomSheetScaffold extends StatelessWidget {
                     onClear();
                     context.pop();
                   },
-                  child: const Text('action_common_clear').tr(),
+                  child: const Text('clear').tr(),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
+                  key: const Key('search_filter_apply'),
                   onPressed: () {
                     onSearch();
                     context.pop();

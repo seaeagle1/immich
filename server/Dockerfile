@@ -1,65 +1,53 @@
-# dev build
-FROM ghcr.io/immich-app/base-server-dev:20241119@sha256:fef1bead6a594ebd6fa54712c3dc4db050173657738db0c21bb91b00f8b56320 AS dev
+FROM ghcr.io/immich-app/base-server-dev:202509091104@sha256:4f9275330f1e49e7ce9840758ea91839052fe6ed40972d5bb97a9af857fa956a AS builder
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
+  CI=1 \
+  COREPACK_HOME=/tmp
 
-RUN apt-get install --no-install-recommends -yqq tini
-WORKDIR /usr/src/app
-COPY server/package.json server/package-lock.json ./
-RUN npm ci && \
-  # exiftool-vendored.pl, sharp-linux-x64 and sharp-linux-arm64 are the only ones we need
-  # they're marked as optional dependencies, so we need to copy them manually after pruning
-  rm -rf node_modules/@img/sharp-libvips* && \
-  rm -rf node_modules/@img/sharp-linuxmusl-x64
-COPY server .
-ENV PATH="${PATH}:/usr/src/app/bin" \
-  IMMICH_ENV=development \
-  NVIDIA_DRIVER_CAPABILITIES=all \
-  NVIDIA_VISIBLE_DEVICES=all
-ENTRYPOINT ["tini", "--", "/bin/sh"]
+RUN npm install --global corepack@latest && \
+  corepack enable pnpm
 
-
-FROM dev AS prod
-
-RUN npm run build
-RUN npm prune --omit=dev --omit=optional
-COPY --from=dev /usr/src/app/node_modules/@img ./node_modules/@img
-COPY --from=dev /usr/src/app/node_modules/exiftool-vendored.pl ./node_modules/exiftool-vendored.pl
-
-# web build
-FROM node:22.11.0-alpine3.20@sha256:b64ced2e7cd0a4816699fe308ce6e8a08ccba463c757c00c14cd372e3d2c763e AS web
-
-WORKDIR /usr/src/open-api/typescript-sdk
-COPY open-api/typescript-sdk/package*.json open-api/typescript-sdk/tsconfig*.json ./
-RUN npm ci
-COPY open-api/typescript-sdk/ ./
-RUN npm run build
+FROM builder AS server
 
 WORKDIR /usr/src/app
-COPY web/package*.json web/svelte.config.js ./
-RUN npm ci
-COPY web ./
-COPY i18n ../i18n
-RUN npm run build
+COPY ./package* ./pnpm* .pnpmfile.cjs ./
+COPY ./server ./server/
+RUN SHARP_IGNORE_GLOBAL_LIBVIPS=true pnpm --filter immich --frozen-lockfile build && \
+  SHARP_FORCE_GLOBAL_LIBVIPS=true pnpm --filter immich --frozen-lockfile --prod --no-optional deploy /output/server-pruned
 
+FROM builder AS web
 
-# prod build
-FROM ghcr.io/immich-app/base-server-prod:20241119@sha256:0ab6c3d0d41924fba45f92c383bcf405abda338602d1140d151963bbbb088759
+WORKDIR /usr/src/app
+COPY ./package* ./pnpm* .pnpmfile.cjs ./
+COPY ./web ./web/
+COPY ./i18n ./i18n/
+COPY ./open-api ./open-api/
+RUN SHARP_IGNORE_GLOBAL_LIBVIPS=true pnpm --filter @immich/sdk --filter immich-web --frozen-lockfile --force install && \
+  pnpm --filter @immich/sdk --filter immich-web build
+
+FROM builder AS cli
+
+COPY ./package* ./pnpm* .pnpmfile.cjs ./
+COPY ./cli ./cli/
+COPY ./open-api ./open-api/
+RUN pnpm --filter @immich/sdk --filter @immich/cli --frozen-lockfile install && \
+  pnpm --filter @immich/sdk --filter @immich/cli build && \
+  pnpm --filter @immich/cli --prod --no-optional deploy /output/cli-pruned
+
+FROM ghcr.io/immich-app/base-server-prod:202509091104@sha256:d1ccbac24c84f2f8277cf85281edfca62d85d7daed6a62b8efd3a81bcd3c5e0e
 
 WORKDIR /usr/src/app
 ENV NODE_ENV=production \
   NVIDIA_DRIVER_CAPABILITIES=all \
   NVIDIA_VISIBLE_DEVICES=all
-COPY --from=prod /usr/src/app/node_modules ./node_modules
-COPY --from=prod /usr/src/app/dist ./dist
-COPY --from=prod /usr/src/app/bin ./bin
-COPY --from=web /usr/src/app/build /build/www
-COPY server/resources resources
-COPY server/package.json server/package-lock.json ./
-COPY server/start*.sh ./
-COPY "docker/scripts/get-cpus.sh" ./
-RUN npm link && npm install -g @immich/cli && npm cache clean --force
+
+COPY --from=server /output/server-pruned ./server
+COPY --from=web /usr/src/app/web/build /build/www
+COPY --from=cli /output/cli-pruned ./cli
+RUN ln -s ../../cli/bin/immich server/bin/immich
 COPY LICENSE /licenses/LICENSE.txt
 COPY LICENSE /LICENSE
-ENV PATH="${PATH}:/usr/src/app/bin"
+
+ENV PATH="${PATH}:/usr/src/app/server/bin"
 
 ARG BUILD_ID
 ARG BUILD_IMAGE
@@ -76,9 +64,9 @@ ENV IMMICH_SOURCE_REF=${BUILD_SOURCE_REF}
 ENV IMMICH_SOURCE_COMMIT=${BUILD_SOURCE_COMMIT}
 ENV IMMICH_SOURCE_URL=https://github.com/immich-app/immich/commit/${BUILD_SOURCE_COMMIT}
 
-VOLUME /usr/src/app/upload
+VOLUME /data
 EXPOSE 2283
-ENTRYPOINT ["tini", "--", "/bin/bash"]
+ENTRYPOINT ["tini", "--", "/bin/bash", "-c"]
 CMD ["start.sh"]
 
 HEALTHCHECK CMD immich-healthcheck

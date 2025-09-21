@@ -28,7 +28,7 @@ interface Element {
   requestFullscreen?(options?: FullscreenOptions): Promise<void>;
 }
 
-import type en from '$lib/en.json';
+import type en from '$i18n/en.json';
 import 'svelte-i18n';
 
 type NestedKeys<T, K = keyof T> = K extends keyof T & string
@@ -36,7 +36,7 @@ type NestedKeys<T, K = keyof T> = K extends keyof T & string
   : never;
 
 declare module 'svelte-i18n' {
-  import type { InterpolationValues } from '$lib/components/i18n/format-message.svelte';
+  import type { InterpolationValues } from '$lib/elements/format-message.svelte';
   import type { Readable } from 'svelte/store';
 
   type Translations = NestedKeys<typeof en>;

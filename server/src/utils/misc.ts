@@ -6,14 +6,21 @@ import {
   SwaggerDocumentOptions,
   SwaggerModule,
 } from '@nestjs/swagger';
-import { ReferenceObject, SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+import {
+  OperationObject,
+  ReferenceObject,
+  SchemaObject,
+} from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 import _ from 'lodash';
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
+import picomatch from 'picomatch';
+import parse from 'picomatch/lib/parse';
 import { SystemConfig } from 'src/config';
 import { CLIP_MODEL_INFO, serverVersion } from 'src/constants';
-import { ImmichCookie, ImmichHeader, MetadataKey } from 'src/enum';
-import { ILoggerRepository } from 'src/interfaces/logger.interface';
+import { extraSyncModels } from 'src/dtos/sync.dto';
+import { ApiCustomExtension, ImmichCookie, ImmichHeader, MetadataKey } from 'src/enum';
+import { LoggingRepository } from 'src/repositories/logging.repository';
 
 export class ImmichStartupError extends Error {}
 export const isStartUpError = (error: unknown): error is ImmichStartupError => error instanceof ImmichStartupError;
@@ -41,8 +48,8 @@ export const getMethodNames = (instance: any) => {
   return methods;
 };
 
-export const getExternalDomain = (server: SystemConfig['server'], port: number) =>
-  server.externalDomain || `http://localhost:${port}`;
+export const getExternalDomain = (server: SystemConfig['server'], defaultDomain = 'https://my.immich.app') =>
+  server.externalDomain || defaultDomain;
 
 /**
  * @returns a list of strings representing the keys of the object in dot notation
@@ -96,7 +103,7 @@ export const isFaceImportEnabled = (metadata: SystemConfig['metadata']) => metad
 
 export const isConnectionAborted = (error: Error | any) => error.code === 'ECONNABORTED';
 
-export const handlePromiseError = <T>(promise: Promise<T>, logger: ILoggerRepository): void => {
+export const handlePromiseError = <T>(promise: Promise<T>, logger: LoggingRepository): void => {
   promise.catch((error: Error | any) => logger.error(`Promise error: ${error}`, error?.stack));
 };
 
@@ -195,7 +202,12 @@ const patchOpenAPI = (document: OpenAPIObject) => {
       trace: path.trace,
     };
 
-    for (const operation of Object.values(operations)) {
+    for (const operation of Object.values(operations) as Array<
+      OperationObject & {
+        [ApiCustomExtension.AdminOnly]?: boolean;
+        [ApiCustomExtension.Permission]?: string;
+      }
+    >) {
       if (!operation) {
         continue;
       }
@@ -208,12 +220,21 @@ const patchOpenAPI = (document: OpenAPIObject) => {
         // console.log(`${routeToErrorMessage(operation.operationId).padEnd(40)} (${operation.operationId})`);
       }
 
-      if (operation.description === '') {
-        delete operation.description;
-      }
+      const adminOnly = operation[ApiCustomExtension.AdminOnly] ?? false;
+      const permission = operation[ApiCustomExtension.Permission];
+      if (permission) {
+        let description = (operation.description || '').trim();
+        if (description && !description.endsWith('.')) {
+          description += '. ';
+        }
 
-      if (operation.parameters) {
-        operation.parameters = _.orderBy(operation.parameters, 'name');
+        operation.description =
+          description +
+          `This endpoint ${adminOnly ? 'is an admin-only route, and ' : ''}requires the \`${permission}\` permission.`;
+
+        if (operation.parameters) {
+          operation.parameters = _.orderBy(operation.parameters, 'name');
+        }
       }
     }
   }
@@ -231,20 +252,21 @@ export const useSwagger = (app: INestApplication, { write }: { write: boolean })
       scheme: 'Bearer',
       in: 'header',
     })
-    .addCookieAuth(ImmichCookie.ACCESS_TOKEN)
+    .addCookieAuth(ImmichCookie.AccessToken)
     .addApiKey(
       {
         type: 'apiKey',
         in: 'header',
-        name: ImmichHeader.API_KEY,
+        name: ImmichHeader.ApiKey,
       },
-      MetadataKey.API_KEY_SECURITY,
+      MetadataKey.ApiKeySecurity,
     )
     .addServer('/api')
     .build();
 
   const options: SwaggerDocumentOptions = {
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
+    extraModels: extraSyncModels,
   };
 
   const specification = SwaggerModule.createDocument(app, config, options);
@@ -253,6 +275,8 @@ export const useSwagger = (app: INestApplication, { write }: { write: boolean })
     swaggerOptions: {
       persistAuthorization: true,
     },
+    jsonDocumentUrl: '/api/spec.json',
+    yamlDocumentUrl: '/api/spec.yaml',
     customSiteTitle: 'Immich API Documentation',
   };
 
@@ -264,3 +288,39 @@ export const useSwagger = (app: INestApplication, { write }: { write: boolean })
     writeFileSync(outputPath, JSON.stringify(patchOpenAPI(specification), null, 2), { encoding: 'utf8' });
   }
 };
+
+const convertTokenToSqlPattern = (token: parse.Token): string => {
+  switch (token.type) {
+    case 'slash': {
+      return '/';
+    }
+    case 'text': {
+      return token.value;
+    }
+    case 'globstar':
+    case 'star': {
+      return '%';
+    }
+    case 'underscore': {
+      return String.raw`\_`;
+    }
+    case 'qmark': {
+      return '_';
+    }
+    case 'dot': {
+      return '.';
+    }
+    default: {
+      return '';
+    }
+  }
+};
+
+export const globToSqlPattern = (glob: string) => {
+  const tokens = picomatch.parse(glob).tokens;
+  return tokens.map((token) => convertTokenToSqlPattern(token)).join('');
+};
+
+export function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}

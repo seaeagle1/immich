@@ -16,13 +16,16 @@ class UsersApi {
 
   final ApiClient apiClient;
 
-  /// Performs an HTTP 'POST /users/profile-image' operation and returns the [Response].
+  /// This endpoint requires the `userProfileImage.update` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [MultipartFile] file (required):
   Future<Response> createProfileImageWithHttpInfo(MultipartFile file,) async {
     // ignore: prefer_const_declarations
-    final path = r'/users/profile-image';
+    final apiPath = r'/users/profile-image';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -34,7 +37,7 @@ class UsersApi {
     const contentTypes = <String>['multipart/form-data'];
 
     bool hasFields = false;
-    final mp = MultipartRequest('POST', Uri.parse(path));
+    final mp = MultipartRequest('POST', Uri.parse(apiPath));
     if (file != null) {
       hasFields = true;
       mp.fields[r'file'] = file.field;
@@ -45,7 +48,7 @@ class UsersApi {
     }
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'POST',
       queryParams,
       postBody,
@@ -55,6 +58,8 @@ class UsersApi {
     );
   }
 
+  /// This endpoint requires the `userProfileImage.update` permission.
+  ///
   /// Parameters:
   ///
   /// * [MultipartFile] file (required):
@@ -73,10 +78,12 @@ class UsersApi {
     return null;
   }
 
-  /// Performs an HTTP 'DELETE /users/profile-image' operation and returns the [Response].
+  /// This endpoint requires the `userProfileImage.delete` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
   Future<Response> deleteProfileImageWithHttpInfo() async {
     // ignore: prefer_const_declarations
-    final path = r'/users/profile-image';
+    final apiPath = r'/users/profile-image';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -89,7 +96,7 @@ class UsersApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'DELETE',
       queryParams,
       postBody,
@@ -99,6 +106,7 @@ class UsersApi {
     );
   }
 
+  /// This endpoint requires the `userProfileImage.delete` permission.
   Future<void> deleteProfileImage() async {
     final response = await deleteProfileImageWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
@@ -106,10 +114,12 @@ class UsersApi {
     }
   }
 
-  /// Performs an HTTP 'DELETE /users/me/license' operation and returns the [Response].
+  /// This endpoint requires the `userLicense.delete` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
   Future<Response> deleteUserLicenseWithHttpInfo() async {
     // ignore: prefer_const_declarations
-    final path = r'/users/me/license';
+    final apiPath = r'/users/me/license';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -122,7 +132,7 @@ class UsersApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'DELETE',
       queryParams,
       postBody,
@@ -132,6 +142,7 @@ class UsersApi {
     );
   }
 
+  /// This endpoint requires the `userLicense.delete` permission.
   Future<void> deleteUserLicense() async {
     final response = await deleteUserLicenseWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
@@ -139,10 +150,12 @@ class UsersApi {
     }
   }
 
-  /// Performs an HTTP 'GET /users/me/preferences' operation and returns the [Response].
-  Future<Response> getMyPreferencesWithHttpInfo() async {
+  /// This endpoint requires the `userOnboarding.delete` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> deleteUserOnboardingWithHttpInfo() async {
     // ignore: prefer_const_declarations
-    final path = r'/users/me/preferences';
+    final apiPath = r'/users/me/onboarding';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -155,7 +168,43 @@ class UsersApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// This endpoint requires the `userOnboarding.delete` permission.
+  Future<void> deleteUserOnboarding() async {
+    final response = await deleteUserOnboardingWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// This endpoint requires the `userPreference.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getMyPreferencesWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final apiPath = r'/users/me/preferences';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -165,6 +214,7 @@ class UsersApi {
     );
   }
 
+  /// This endpoint requires the `userPreference.read` permission.
   Future<UserPreferencesResponseDto?> getMyPreferences() async {
     final response = await getMyPreferencesWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
@@ -180,10 +230,12 @@ class UsersApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /users/me' operation and returns the [Response].
+  /// This endpoint requires the `user.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
   Future<Response> getMyUserWithHttpInfo() async {
     // ignore: prefer_const_declarations
-    final path = r'/users/me';
+    final apiPath = r'/users/me';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -196,7 +248,7 @@ class UsersApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -206,6 +258,7 @@ class UsersApi {
     );
   }
 
+  /// This endpoint requires the `user.read` permission.
   Future<UserAdminResponseDto?> getMyUser() async {
     final response = await getMyUserWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
@@ -221,13 +274,16 @@ class UsersApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /users/{id}/profile-image' operation and returns the [Response].
+  /// This endpoint requires the `userProfileImage.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> getProfileImageWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/users/{id}/profile-image'
+    final apiPath = r'/users/{id}/profile-image'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -241,7 +297,7 @@ class UsersApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -251,6 +307,8 @@ class UsersApi {
     );
   }
 
+  /// This endpoint requires the `userProfileImage.read` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -269,13 +327,16 @@ class UsersApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /users/{id}' operation and returns the [Response].
+  /// This endpoint requires the `user.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> getUserWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/users/{id}'
+    final apiPath = r'/users/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -289,7 +350,7 @@ class UsersApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -299,6 +360,8 @@ class UsersApi {
     );
   }
 
+  /// This endpoint requires the `user.read` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -317,10 +380,12 @@ class UsersApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /users/me/license' operation and returns the [Response].
+  /// This endpoint requires the `userLicense.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
   Future<Response> getUserLicenseWithHttpInfo() async {
     // ignore: prefer_const_declarations
-    final path = r'/users/me/license';
+    final apiPath = r'/users/me/license';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -333,7 +398,7 @@ class UsersApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -343,6 +408,7 @@ class UsersApi {
     );
   }
 
+  /// This endpoint requires the `userLicense.read` permission.
   Future<LicenseResponseDto?> getUserLicense() async {
     final response = await getUserLicenseWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
@@ -358,10 +424,12 @@ class UsersApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /users' operation and returns the [Response].
-  Future<Response> searchUsersWithHttpInfo() async {
+  /// This endpoint requires the `userOnboarding.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getUserOnboardingWithHttpInfo() async {
     // ignore: prefer_const_declarations
-    final path = r'/users';
+    final apiPath = r'/users/me/onboarding';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -374,7 +442,7 @@ class UsersApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -384,6 +452,51 @@ class UsersApi {
     );
   }
 
+  /// This endpoint requires the `userOnboarding.read` permission.
+  Future<OnboardingResponseDto?> getUserOnboarding() async {
+    final response = await getUserOnboardingWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OnboardingResponseDto',) as OnboardingResponseDto;
+    
+    }
+    return null;
+  }
+
+  /// This endpoint requires the `user.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> searchUsersWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final apiPath = r'/users';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      apiPath,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// This endpoint requires the `user.read` permission.
   Future<List<UserResponseDto>?> searchUsers() async {
     final response = await searchUsersWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
@@ -402,13 +515,16 @@ class UsersApi {
     return null;
   }
 
-  /// Performs an HTTP 'PUT /users/me/license' operation and returns the [Response].
+  /// This endpoint requires the `userLicense.update` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [LicenseKeyDto] licenseKeyDto (required):
   Future<Response> setUserLicenseWithHttpInfo(LicenseKeyDto licenseKeyDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/users/me/license';
+    final apiPath = r'/users/me/license';
 
     // ignore: prefer_final_locals
     Object? postBody = licenseKeyDto;
@@ -421,7 +537,7 @@ class UsersApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'PUT',
       queryParams,
       postBody,
@@ -431,6 +547,8 @@ class UsersApi {
     );
   }
 
+  /// This endpoint requires the `userLicense.update` permission.
+  ///
   /// Parameters:
   ///
   /// * [LicenseKeyDto] licenseKeyDto (required):
@@ -449,13 +567,68 @@ class UsersApi {
     return null;
   }
 
-  /// Performs an HTTP 'PUT /users/me/preferences' operation and returns the [Response].
+  /// This endpoint requires the `userOnboarding.update` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [OnboardingDto] onboardingDto (required):
+  Future<Response> setUserOnboardingWithHttpInfo(OnboardingDto onboardingDto,) async {
+    // ignore: prefer_const_declarations
+    final apiPath = r'/users/me/onboarding';
+
+    // ignore: prefer_final_locals
+    Object? postBody = onboardingDto;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      apiPath,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// This endpoint requires the `userOnboarding.update` permission.
+  ///
+  /// Parameters:
+  ///
+  /// * [OnboardingDto] onboardingDto (required):
+  Future<OnboardingResponseDto?> setUserOnboarding(OnboardingDto onboardingDto,) async {
+    final response = await setUserOnboardingWithHttpInfo(onboardingDto,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OnboardingResponseDto',) as OnboardingResponseDto;
+    
+    }
+    return null;
+  }
+
+  /// This endpoint requires the `userPreference.update` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [UserPreferencesUpdateDto] userPreferencesUpdateDto (required):
   Future<Response> updateMyPreferencesWithHttpInfo(UserPreferencesUpdateDto userPreferencesUpdateDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/users/me/preferences';
+    final apiPath = r'/users/me/preferences';
 
     // ignore: prefer_final_locals
     Object? postBody = userPreferencesUpdateDto;
@@ -468,7 +641,7 @@ class UsersApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'PUT',
       queryParams,
       postBody,
@@ -478,6 +651,8 @@ class UsersApi {
     );
   }
 
+  /// This endpoint requires the `userPreference.update` permission.
+  ///
   /// Parameters:
   ///
   /// * [UserPreferencesUpdateDto] userPreferencesUpdateDto (required):
@@ -496,13 +671,16 @@ class UsersApi {
     return null;
   }
 
-  /// Performs an HTTP 'PUT /users/me' operation and returns the [Response].
+  /// This endpoint requires the `user.update` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [UserUpdateMeDto] userUpdateMeDto (required):
   Future<Response> updateMyUserWithHttpInfo(UserUpdateMeDto userUpdateMeDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/users/me';
+    final apiPath = r'/users/me';
 
     // ignore: prefer_final_locals
     Object? postBody = userUpdateMeDto;
@@ -515,7 +693,7 @@ class UsersApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'PUT',
       queryParams,
       postBody,
@@ -525,6 +703,8 @@ class UsersApi {
     );
   }
 
+  /// This endpoint requires the `user.update` permission.
+  ///
   /// Parameters:
   ///
   /// * [UserUpdateMeDto] userUpdateMeDto (required):

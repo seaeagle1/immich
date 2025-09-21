@@ -16,10 +16,17 @@ class DuplicatesApi {
 
   final ApiClient apiClient;
 
-  /// Performs an HTTP 'GET /duplicates' operation and returns the [Response].
-  Future<Response> getAssetDuplicatesWithHttpInfo() async {
+  /// This endpoint requires the `duplicate.delete` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> deleteDuplicateWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/duplicates';
+    final apiPath = r'/duplicates/{id}'
+      .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -32,7 +39,91 @@ class DuplicatesApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// This endpoint requires the `duplicate.delete` permission.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> deleteDuplicate(String id,) async {
+    final response = await deleteDuplicateWithHttpInfo(id,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// This endpoint requires the `duplicate.delete` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [BulkIdsDto] bulkIdsDto (required):
+  Future<Response> deleteDuplicatesWithHttpInfo(BulkIdsDto bulkIdsDto,) async {
+    // ignore: prefer_const_declarations
+    final apiPath = r'/duplicates';
+
+    // ignore: prefer_final_locals
+    Object? postBody = bulkIdsDto;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+
+    return apiClient.invokeAPI(
+      apiPath,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// This endpoint requires the `duplicate.delete` permission.
+  ///
+  /// Parameters:
+  ///
+  /// * [BulkIdsDto] bulkIdsDto (required):
+  Future<void> deleteDuplicates(BulkIdsDto bulkIdsDto,) async {
+    final response = await deleteDuplicatesWithHttpInfo(bulkIdsDto,);
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// This endpoint requires the `duplicate.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getAssetDuplicatesWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final apiPath = r'/duplicates';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+
+    return apiClient.invokeAPI(
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -42,6 +133,7 @@ class DuplicatesApi {
     );
   }
 
+  /// This endpoint requires the `duplicate.read` permission.
   Future<List<DuplicateResponseDto>?> getAssetDuplicates() async {
     final response = await getAssetDuplicatesWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {

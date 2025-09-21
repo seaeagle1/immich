@@ -16,13 +16,16 @@ class LibrariesApi {
 
   final ApiClient apiClient;
 
-  /// Performs an HTTP 'POST /libraries' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `library.create` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [CreateLibraryDto] createLibraryDto (required):
   Future<Response> createLibraryWithHttpInfo(CreateLibraryDto createLibraryDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/libraries';
+    final apiPath = r'/libraries';
 
     // ignore: prefer_final_locals
     Object? postBody = createLibraryDto;
@@ -35,7 +38,7 @@ class LibrariesApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'POST',
       queryParams,
       postBody,
@@ -45,6 +48,8 @@ class LibrariesApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `library.create` permission.
+  ///
   /// Parameters:
   ///
   /// * [CreateLibraryDto] createLibraryDto (required):
@@ -63,13 +68,16 @@ class LibrariesApi {
     return null;
   }
 
-  /// Performs an HTTP 'DELETE /libraries/{id}' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `library.delete` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> deleteLibraryWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/libraries/{id}'
+    final apiPath = r'/libraries/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -83,7 +91,7 @@ class LibrariesApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'DELETE',
       queryParams,
       postBody,
@@ -93,6 +101,8 @@ class LibrariesApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `library.delete` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -103,10 +113,12 @@ class LibrariesApi {
     }
   }
 
-  /// Performs an HTTP 'GET /libraries' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `library.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
   Future<Response> getAllLibrariesWithHttpInfo() async {
     // ignore: prefer_const_declarations
-    final path = r'/libraries';
+    final apiPath = r'/libraries';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -119,7 +131,7 @@ class LibrariesApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -129,6 +141,7 @@ class LibrariesApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `library.read` permission.
   Future<List<LibraryResponseDto>?> getAllLibraries() async {
     final response = await getAllLibrariesWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
@@ -147,13 +160,16 @@ class LibrariesApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /libraries/{id}' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `library.read` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> getLibraryWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/libraries/{id}'
+    final apiPath = r'/libraries/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -167,7 +183,7 @@ class LibrariesApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -177,6 +193,8 @@ class LibrariesApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `library.read` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -195,13 +213,16 @@ class LibrariesApi {
     return null;
   }
 
-  /// Performs an HTTP 'GET /libraries/{id}/statistics' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `library.statistics` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> getLibraryStatisticsWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/libraries/{id}/statistics'
+    final apiPath = r'/libraries/{id}/statistics'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -215,7 +236,7 @@ class LibrariesApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'GET',
       queryParams,
       postBody,
@@ -225,6 +246,8 @@ class LibrariesApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `library.statistics` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -243,13 +266,16 @@ class LibrariesApi {
     return null;
   }
 
-  /// Performs an HTTP 'POST /libraries/{id}/scan' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `library.update` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
   Future<Response> scanLibraryWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/libraries/{id}/scan'
+    final apiPath = r'/libraries/{id}/scan'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -263,7 +289,7 @@ class LibrariesApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'POST',
       queryParams,
       postBody,
@@ -273,6 +299,8 @@ class LibrariesApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `library.update` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -283,7 +311,10 @@ class LibrariesApi {
     }
   }
 
-  /// Performs an HTTP 'PUT /libraries/{id}' operation and returns the [Response].
+  /// This endpoint is an admin-only route, and requires the `library.update` permission.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -291,7 +322,7 @@ class LibrariesApi {
   /// * [UpdateLibraryDto] updateLibraryDto (required):
   Future<Response> updateLibraryWithHttpInfo(String id, UpdateLibraryDto updateLibraryDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/libraries/{id}'
+    final apiPath = r'/libraries/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -305,7 +336,7 @@ class LibrariesApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'PUT',
       queryParams,
       postBody,
@@ -315,6 +346,8 @@ class LibrariesApi {
     );
   }
 
+  /// This endpoint is an admin-only route, and requires the `library.update` permission.
+  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -343,7 +376,7 @@ class LibrariesApi {
   /// * [ValidateLibraryDto] validateLibraryDto (required):
   Future<Response> validateWithHttpInfo(String id, ValidateLibraryDto validateLibraryDto,) async {
     // ignore: prefer_const_declarations
-    final path = r'/libraries/{id}/validate'
+    final apiPath = r'/libraries/{id}/validate'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -357,7 +390,7 @@ class LibrariesApi {
 
 
     return apiClient.invokeAPI(
-      path,
+      apiPath,
       'POST',
       queryParams,
       postBody,
