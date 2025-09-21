@@ -287,18 +287,6 @@ export class MetadataService extends BaseService {
       autoStackId: this.getAutoStackId(exifTags),
     };
 
-    const promises: Promise<unknown>[] = [
-      this.assetRepository.upsertExif(exifData),
-      this.assetRepository.update({
-        id: asset.id,
-        duration: exifTags.Duration?.toString() ?? null,
-        localDateTime: dates.localDateTime,
-        fileCreatedAt: dates.dateTimeOriginal ?? undefined,
-        fileModifiedAt: stats.mtime,
-      }),
-      this.applyTagList(asset, exifTags),
-    ];
-
     // check for tags to exclude asset from timeline
     let setArchived = false;
     let catTags = exifTags.HierarchicalSubject;
@@ -306,14 +294,19 @@ export class MetadataService extends BaseService {
             || catTags.indexOf('Categorie|Afgewezen') >= 0)) {
         setArchived = true;
     }
-    
-    promises.push(this.assetRepository.update({
-      id: asset.id,
-      duration: exifTags.Duration?.toString() ?? null,
-      localDateTime,
-      fileCreatedAt: exifData.dateTimeOriginal ?? undefined,
-      isArchived: setArchived ? true : undefined,
-    });
+
+    const promises: Promise<unknown>[] = [
+      this.assetRepository.upsertExif(exifData),
+      this.assetRepository.update({
+        id: asset.id,
+        duration: exifTags.Duration?.toString() ?? null,
+        localDateTime: dates.localDateTime,
+        fileCreatedAt: dates.dateTimeOriginal ?? undefined,
+        fileModifiedAt: stats.mtime,      
+		isArchived: setArchived ? true : undefined,
+      }),
+      this.applyTagList(asset, exifTags),
+    ];
 
     if (this.isMotionPhoto(asset, exifTags)) {
       promises.push(this.applyMotionPhotos(asset, exifTags, dates, stats));
